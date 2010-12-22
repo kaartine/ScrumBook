@@ -9,6 +9,7 @@ require './project.rb'
 class ScrumBook
 
   def initialize
+  	@days = ['ma', 'ti', 'ke', 'to', 'pe']
   	@project = Project.new
 
     @root = TkRoot.new
@@ -22,12 +23,12 @@ class ScrumBook
   def createTabs
     tab = Tk::Tile::Notebook.new(@root) do
     	height 200
-    	width 400
+    	width 800
     end
 
     createConfigTab(tab)
+    createSprintTab(tab)
 
-    @sprintTab = TkFrame.new(tab)
     @burnDownTab = TkFrame.new(tab)
 
     tab.add @configsTab , :text => 'Configs'
@@ -36,6 +37,51 @@ class ScrumBook
 
     tab.pack
   end
+
+	def createSprintTab(tab)
+		@sprintTab = TkFrame.new(tab)
+
+		tree = Tk::Tile::Treeview.new(@sprintTab) # {columns 'commiter status'}
+
+		print @project.sprintlength.value.to_i
+		columns = 'committer status'
+		@project.sprintlength.value.to_i.times.each do |d|
+			columns += " w" + d.to_s()
+		end
+		print columns
+	  tree['columns'] = columns.to_s
+		print tree['columns']
+
+		tree.insert('', 'end', :id => 'widgets', :text => 'Widget Tour')
+		tree.insert('', 0, :id => 'gallery', :text => 'Applications')
+		item = tree.insert('', 'end', :text => 'Tutorial')
+		tree.insert( 'widgets', 'end', :text => 'Canvas')
+		tree.insert( item, 'end', :text => 'Tree')
+
+		tree.itemconfigure('widgets', 'open', true); # or item['open'] = true
+		isopen = tree.itemcget('widgets', 'open');   # or isopen = item['open']
+
+		tree.column_configure( 'committer', :width => 90, :anchor => 'center')
+		tree.heading_configure( 'committer', :text => 'Committer')
+		tree.heading_configure( 'status', :text => 'Status')
+
+		i = 0
+		@project.sprintlength.value.to_i.times.each do |d|
+			tree.heading_configure( 'w' + d.to_s, :text => @days[i])
+			tree.column_configure( 'w' + d.to_s, :width => 10, :anchor => 'center')
+			i+=1
+			if i >= 5
+			 	i = 0
+			end
+			print i
+		end
+
+		tree.set('widgets', 'committer', 'JK'); # or item.set('size', '12KB')
+		size = tree.get('widgets', 'committer');  # or item.get('size')
+		tree.insert('', 'end', :text => 'Listbox', :values => ['GK','Done','0'])
+
+		tree.pack
+	end
 
   def createConfigTab(tab)
 		@configsTab = TkFrame.new(tab)
@@ -53,15 +99,12 @@ class ScrumBook
 		#sprint lenght
 		sprintEntry = TkEntry.new(@configsTab)
 		@project.sprintlength = TkVariable.new
-		@project.sprintlength.value = "Sprint length in days"
+		@project.sprintlength.value = "10"
 		sprintEntry.textvariable = @project.sprintlength
 		sprintEntry.place('height' => 25,
             'width'  => 150,
             'x'      => 200,
             'y'      => 10)
-
-
-
   end
 
   def createMenu
