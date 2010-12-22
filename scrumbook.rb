@@ -74,6 +74,26 @@ class ScrumBook
       )
     }
 
+    @exit = Proc.new {
+    	if @project.saved?
+      	exit
+      else
+     		 yes = Tk.messageBox(
+	        'type'    => "yesno",
+	        'icon'    => "question",
+	        'title'   => "Title",
+	        'message' => "Project is not saved! Save before exiting?",
+	        'default' => "yes"
+      		)
+      	if yes == "yes"
+      		@project.save
+      	end
+
+      	exit
+      end
+    }
+
+
     file_menu = TkMenu.new(@root)
 
     file_menu.add('command',
@@ -100,7 +120,7 @@ class ScrumBook
     file_menu.add('separator')
     file_menu.add('command',
                   'label'     => "Exit",
-                  'command'   => @menu_click,
+                  'command'   => @exit,
                   'underline' => 3)
 
     menu_bar = TkMenu.new
