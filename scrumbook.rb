@@ -3,8 +3,9 @@ require 'tkextlib/tile'
 
 require './project.rb'
 
-#export TCL_LIBRARY=/cygdrive/c/Tcl/lib/tcl8.4
+require './helpfunctions.rb'
 
+#export TCL_LIBRARY=/cygdrive/c/Tcl/lib/tcl8.4
 
 class ScrumBook
 
@@ -22,7 +23,7 @@ class ScrumBook
 
   def createTabs
     tab = Tk::Tile::Notebook.new(@root) do
-    	height 200
+#    	height 200
     	width 800
     end
 
@@ -35,52 +36,116 @@ class ScrumBook
     tab.add @sprintTab, :text => 'Sprint'
     tab.add @burnDownTab, :text => 'Burn Down'
 
-    tab.pack
+    tab.pack("expand" => "1", "fill" => "both")
   end
+
+  def updateSprint id
+  	logger "sprint_id: " + id.to_s
+
+		items = @sprintTaskTree.children('')
+  	@sprintTaskTree.delete(items)
+
+		if @project.tasks[id]
+	  	@project.tasks[id].each do |t|
+	  		@sprintTaskTree.insert('', 'end', :id => t.name, :text => t.name)
+	  		@sprintTaskTree.set( t.name, 'committer', t.committer)
+	  		@sprintTaskTree.set( t.name, 'status', t.status)
+	  	end
+	  end
+
+#		@sprintTaskTree.insert('', 'end', :id => 'widgets', :text => 'Widget Tour')
+#		@sprintTaskTree.insert('', 0, :id => 'gallery', :text => 'Applications')
+#		item = @sprintTaskTree.insert('', 'end', :text => 'Tutorial')
+#		@sprintTaskTree.insert( 'widgets', 'end', :text => 'Canvas')
+#		@sprintTaskTree.insert( item, 'end', :text => 'Tree')
+#		@sprintTaskTree.set('widgets', 'committer', 'JK'); # or item.set('size', '12KB')
+#		size = @sprintTaskTree.get('widgets', 'committer');  # or item.get('size')
+#		@sprintTaskTree.insert('', 'end', :text => 'Listbox', :values => ['GK','Done','0'])
+
+#		@sprintTaskTree.itemconfigure('widgets', 'open', true); # or item['open'] = true
+#		isopen = @sprintTaskTree.itemcget('widgets', 'open');   # or isopen = item['open']
+
+  end
+
 
 	def createSprintTab(tab)
 		@sprintTab = TkFrame.new(tab)
 
-		tree = Tk::Tile::Treeview.new(@sprintTab) # {columns 'commiter status'}
+		@changeSprint = Proc.new {
+			updateSprint(@project.sprint.value.to_i)
+		}
 
-		print @project.sprintlength.value.to_i
+		#sprint selector
+		sprintEntry = TkSpinbox.new(@sprintTab) do
+			to 1000
+			from 0
+			increment 1
+			width 10
+			command @changeSprint
+		end
+
+		sprintEntry.bind("ButtonRelease-1", @changeSprint)
+
+		@project.sprint = TkVariable.new
+		@project.sprint.value = "1"
+		sprintEntry.textvariable = @project.sprint
+		sprintEntry.pack("side" => "left")
+
+		@sprintTaskTree = Tk::Tile::Treeview.new(@sprintTab) # {columns 'commiter status'}
+
+		logger @project.sprintlength.to_i
+
 		columns = 'committer status'
-		@project.sprintlength.value.to_i.times.each do |d|
+		@project.sprintlength.to_i.times.each do |d|
 			columns += " w" + d.to_s()
 		end
-		print columns
-	  tree['columns'] = columns.to_s
-		print tree['columns']
 
-		tree.insert('', 'end', :id => 'widgets', :text => 'Widget Tour')
-		tree.insert('', 0, :id => 'gallery', :text => 'Applications')
-		item = tree.insert('', 'end', :text => 'Tutorial')
-		tree.insert( 'widgets', 'end', :text => 'Canvas')
-		tree.insert( item, 'end', :text => 'Tree')
+		logger columns
+	  @sprintTaskTree['columns'] = columns.to_s
+		logger @sprintTaskTree['columns'], 4
 
-		tree.itemconfigure('widgets', 'open', true); # or item['open'] = true
-		isopen = tree.itemcget('widgets', 'open');   # or isopen = item['open']
-
-		tree.column_configure( 'committer', :width => 90, :anchor => 'center')
-		tree.heading_configure( 'committer', :text => 'Committer')
-		tree.heading_configure( 'status', :text => 'Status')
+		@sprintTaskTree.column_configure( 'committer', :width => 90, :anchor => 'center')
+		@sprintTaskTree.heading_configure( 'committer', :text => 'Committer')
+		@sprintTaskTree.heading_configure( 'status', :text => 'Status')
 
 		i = 0
-		@project.sprintlength.value.to_i.times.each do |d|
-			tree.heading_configure( 'w' + d.to_s, :text => @days[i])
-			tree.column_configure( 'w' + d.to_s, :width => 10, :anchor => 'center')
+		@project.sprintlength.to_i.times.each do |d|
+			@sprintTaskTree.heading_configure( 'w' + d.to_s, :text => @days[i])
+			@sprintTaskTree.column_configure( 'w' + d.to_s, :width => 10, :anchor => 'center')
 			i+=1
 			if i >= 5
 			 	i = 0
 			end
-			print i
+			logger i, 4
 		end
 
-		tree.set('widgets', 'committer', 'JK'); # or item.set('size', '12KB')
-		size = tree.get('widgets', 'committer');  # or item.get('size')
-		tree.insert('', 'end', :text => 'Listbox', :values => ['GK','Done','0'])
+		@sprintTaskTree.pack("side" => "top")
 
-		tree.pack
+		@taskName = TkVariable.new
+		@taskCommitter = TkVariable.new
+		@taskStatus = TkVariable.new
+		@taskDuration = Array.new
+		@project.sprintlength.to_i.times.each  do |i|
+			@taskDuration << TkVariable.new
+		end
+
+		taskNameEntry = TkEntry.new(@sprintTab)
+		taskNameEntry.textvariable = @taskName
+		taskNameEntry.pack("side" => "left")
+
+		taskCommitter = TkEntry.new(@sprintTab) #Tk::Tile::ComboBox.new(@sprintTab)
+		taskCommitter.pack("side" => "left")
+		taskStatus = TkEntry.new(@sprintTab) #Tk::Tile::ComboBox.new(@sprintTab)
+		taskStatus.pack("side" => "left")
+		taskDurationEntry = Array.new
+		@project.sprintlength.to_i.times.each do |i|
+			taskDurationEntry << TkEntry.new(@sprintTab) do
+				width 2
+			end
+			taskDurationEntry[i].pack("side" => "left")
+		end
+
+
 	end
 
   def createConfigTab(tab)
@@ -94,16 +159,6 @@ class ScrumBook
 		nameEntry.place('height' => 25,
             'width'  => 150,
             'x'      => 10,
-            'y'      => 10)
-
-		#sprint lenght
-		sprintEntry = TkEntry.new(@configsTab)
-		@project.sprintlength = TkVariable.new
-		@project.sprintlength.value = "10"
-		sprintEntry.textvariable = @project.sprintlength
-		sprintEntry.place('height' => 25,
-            'width'  => 150,
-            'x'      => 200,
             'y'      => 10)
   end
 
@@ -174,6 +229,7 @@ class ScrumBook
     @root.menu(menu_bar)
 
   end
+
 end
 
 ScrumBook.new
