@@ -23,7 +23,6 @@ class ScrumBook
 
   def createTabs
     tab = Tk::Tile::Notebook.new(@root) do
-#    	height 200
     	width 800
     end
 
@@ -39,7 +38,8 @@ class ScrumBook
     tab.pack("expand" => "1", "fill" => "both")
   end
 
-  def updateSprint id
+  def updateSprint(selected_item = nil)
+  	id = @project.sprint.value.to_i
   	logger "sprint_id: " + id.to_s
 
 		items = @sprintTaskTree.children('')
@@ -51,8 +51,9 @@ class ScrumBook
 	  		@sprintTaskTree.set( t.name, 'committer', t.committer)
 	  		@sprintTaskTree.set( t.name, 'status', t.status)
 
- 				@sprintTaskTree.tag_bind('clickapple', '1', @changeTask);
+ 				@sprintTaskTree.tag_bind('clickapple', 'ButtonRelease-1', @changeTask);
 	  	end
+	  	@sprintTaskTree.selection_set(selected_item) if !selected_item.nil?
 	  end
 
 #		@sprintTaskTree.insert('', 'end', :id => 'widgets', :text => 'Widget Tour')
@@ -69,9 +70,8 @@ class ScrumBook
 
   end
 
-  def updateTask
+  def updateTaskEditor
 		item = @sprintTaskTree.focus_item()
-
 		logger "selected: " + item.inspect
 
 		if !item.nil?
@@ -82,19 +82,43 @@ class ScrumBook
 				@taskDuration[i].value = @sprintTaskTree.get(item, "w#{i}")
 			end
 		end
+	end
 
+	def updateTask(id)
+		logger "updateTask: " + id.to_s
+
+		tasks = @project.getActiveSprintsTasks()
+		id = tasks.index(id)
+		logger "task id: " + id.to_s
+
+		if !id.nil?
+			tasks[id].name = @taskName.value
+			tasks[id].committer = @taskCommitter.value
+			tasks[id].status = @taskStatus.value
+			@project.sprintlength.to_i.times.each  do |i|
+				tasks[id].duration[i] = @taskDuration[i].value
+			end
+		end
+
+		updateSprint(tasks[id].name)
+
+	end
+
+	def procUpdateTask
+		item = @sprintTaskTree.focus_item()
+		updateTask(@sprintTaskTree.focus_item().id) if !item.nil?
 	end
 
 	def createSprintTab(tab)
 		@sprintTab = TkFrame.new(tab)
 
 		@changeSprint = Proc.new {
-			updateSprint(@project.sprint.value.to_i)
-		}
-		@changeTask = Proc.new {
-			updateTask
+			updateSprint
 		}
 
+		@changeTask = Proc.new {
+			updateTaskEditor
+		}
 
 		#sprint selector
 		sprintEntry = TkSpinbox.new(@sprintTab) do
@@ -102,7 +126,7 @@ class ScrumBook
 			from 0
 			increment 1
 			width 10
-			command @changeSprint
+			command {$s.updateSprint}
 		end
 
 		sprintEntry.bind("ButtonRelease-1", @changeSprint)
@@ -148,7 +172,7 @@ class ScrumBook
 			@taskDuration << TkVariable.new
 		end
 
-		updateSprint(@project.sprint.value.to_i)
+		updateSprint
 
 		taskNameEntry = TkEntry.new(@sprintTab)
 		taskNameEntry.textvariable = @taskName
@@ -169,7 +193,11 @@ class ScrumBook
 			taskDurationEntry[i].pack("side" => "left")
 		end
 
-		updateTask
+		TkButton.new(@sprintTab) do
+			text 'Update Task'
+			command( proc {$s.procUpdateTask})
+			pack "side" => "left"
+		end
 
 	end
 
@@ -257,5 +285,5 @@ class ScrumBook
 
 end
 
-ScrumBook.new
+$s = ScrumBook.new
 Tk.mainloop

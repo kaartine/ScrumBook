@@ -34,6 +34,11 @@ class Project
 	def save
 		logger "TODO: save function", 1
 	end
+
+	def getActiveSprintsTasks
+		@tasks[@sprint]
+	end
+
 end
 
 
@@ -45,10 +50,15 @@ class Task
 	@name
 	@duration = []
 
-	def initialize name, committer, status
+	def initialize( name, committer, status )
 		@committer = committer
 		@status = status
 		@name = name
+		@duration = Array.new
+	end
+
+	def ==(id)
+		self.name == id
 	end
 
 end
