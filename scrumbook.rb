@@ -47,9 +47,11 @@ class ScrumBook
 
 		if @project.tasks[id]
 	  	@project.tasks[id].each do |t|
-	  		@sprintTaskTree.insert('', 'end', :id => t.name, :text => t.name)
+	  		@sprintTaskTree.insert('', 'end', :id => t.name, :text => t.name, :tags => ['clickapple'])
 	  		@sprintTaskTree.set( t.name, 'committer', t.committer)
 	  		@sprintTaskTree.set( t.name, 'status', t.status)
+
+ 				@sprintTaskTree.tag_bind('clickapple', '1', @changeTask);
 	  	end
 	  end
 
@@ -67,6 +69,21 @@ class ScrumBook
 
   end
 
+  def updateTask
+		item = @sprintTaskTree.focus_item()
+
+		logger "selected: " + item.inspect
+
+		if !item.nil?
+			@taskName.value = item.id
+			@taskCommitter.value = @sprintTaskTree.get(item, 'committer')
+			@taskStatus.value = @sprintTaskTree.get(item, 'status')
+			@project.sprintlength.to_i.times.each  do |i|
+				@taskDuration[i].value = @sprintTaskTree.get(item, "w#{i}")
+			end
+		end
+
+	end
 
 	def createSprintTab(tab)
 		@sprintTab = TkFrame.new(tab)
@@ -74,6 +91,10 @@ class ScrumBook
 		@changeSprint = Proc.new {
 			updateSprint(@project.sprint.value.to_i)
 		}
+		@changeTask = Proc.new {
+			updateTask
+		}
+
 
 		#sprint selector
 		sprintEntry = TkSpinbox.new(@sprintTab) do
@@ -91,9 +112,7 @@ class ScrumBook
 		sprintEntry.textvariable = @project.sprint
 		sprintEntry.pack("side" => "left")
 
-		@sprintTaskTree = Tk::Tile::Treeview.new(@sprintTab) # {columns 'commiter status'}
-
-		logger @project.sprintlength.to_i
+		@sprintTaskTree = Tk::Tile::Treeview.new(@sprintTab)
 
 		columns = 'committer status'
 		@project.sprintlength.to_i.times.each do |d|
@@ -129,13 +148,18 @@ class ScrumBook
 			@taskDuration << TkVariable.new
 		end
 
+		updateSprint(@project.sprint.value.to_i)
+
 		taskNameEntry = TkEntry.new(@sprintTab)
 		taskNameEntry.textvariable = @taskName
 		taskNameEntry.pack("side" => "left")
 
 		taskCommitter = TkEntry.new(@sprintTab) #Tk::Tile::ComboBox.new(@sprintTab)
+		taskCommitter.textvariable = @taskCommitter
 		taskCommitter.pack("side" => "left")
+
 		taskStatus = TkEntry.new(@sprintTab) #Tk::Tile::ComboBox.new(@sprintTab)
+		taskStatus.textvariable = @taskStatus
 		taskStatus.pack("side" => "left")
 		taskDurationEntry = Array.new
 		@project.sprintlength.to_i.times.each do |i|
@@ -145,6 +169,7 @@ class ScrumBook
 			taskDurationEntry[i].pack("side" => "left")
 		end
 
+		updateTask
 
 	end
 
