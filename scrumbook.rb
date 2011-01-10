@@ -17,7 +17,6 @@ class ScrumBook
     @root.title = "ScrumBook"
 
     createTabs
-
     createMenu
   end
 
@@ -38,9 +37,10 @@ class ScrumBook
     tab.pack("expand" => "1", "fill" => "both")
   end
 
-  def updateSprint(selected_item = nil)
-  	id = @project.sprint.value.to_i
+  def refreshSprint(selected_item = nil)
+  	id = @projectSprint.value.to_i
   	logger "sprint_id: " + id.to_s
+  	@project.sprint = id
 
 		items = @sprintTaskTree.children('')
   	@sprintTaskTree.delete(items)
@@ -58,6 +58,8 @@ class ScrumBook
  				@sprintTaskTree.tag_bind('clickapple', 'ButtonRelease-1', @changeTask);
 	  	end
 	  	@sprintTaskTree.selection_set(selected_item) if !selected_item.nil?
+
+	  	logger "project: " + @project.inspect
 	  end
 
 #		@sprintTaskTree.insert('', 'end', :id => 'widgets', :text => 'Widget Tour')
@@ -74,14 +76,14 @@ class ScrumBook
 
   end
 
-  def updateTaskEditor
+  def refreshTaskEditor
   	item = @sprintTaskTree.focus_item()
 		logger "selected: " + item.inspect
 
-		tasks = @project.getActiveSprintsTasks()
-		id = tasks.index(item.id)
-
 		if !item.nil?
+			tasks = @project.getActiveSprintsTasks()
+			id = tasks.index(item.id)
+
 			@taskName.value = tasks[id].name
 			@taskCommitter.value = tasks[id].committer
 			@taskStatus.value = tasks[id].status
@@ -106,9 +108,11 @@ class ScrumBook
 				tasks[id].duration[i] = @taskDuration[i].value
 				logger "task update w#{i}: " + tasks[id].duration[i]
 			end
+
+			@project.not_saved = true
 		end
 
-		updateSprint(tasks[id].name)
+		refreshSprint(tasks[id].name)
 	end
 
 	def procUpdateTask
@@ -120,11 +124,11 @@ class ScrumBook
 		@sprintTab = TkFrame.new(tab)
 
 		@changeSprint = Proc.new {
-			updateSprint
+			refreshSprint
 		}
 
 		@changeTask = Proc.new {
-			updateTaskEditor
+			refreshTaskEditor
 		}
 
 		#sprint selector
@@ -133,14 +137,14 @@ class ScrumBook
 			from 0
 			increment 1
 			width 10
-			command {$s.updateSprint}
+			command {$s.refreshSprint}
 		end
 
 		sprintEntry.bind("ButtonRelease-1", @changeSprint)
 
-		@project.sprint = TkVariable.new
-		@project.sprint.value = "1"
-		sprintEntry.textvariable = @project.sprint
+		@projectSprint = TkVariable.new
+		@projectSprint.value = "1"
+		sprintEntry.textvariable = @projectSprint
 		sprintEntry.pack("side" => "left")
 
 		@sprintTaskTree = Tk::Tile::Treeview.new(@sprintTab)
@@ -171,7 +175,7 @@ class ScrumBook
 
 		@sprintTaskTree.pack("side" => "top")
 
-		updateSprint
+		refreshSprint
 
 		# Task edition fields
 		@taskName = TkVariable.new
@@ -217,9 +221,9 @@ class ScrumBook
 
 		#project name
 		nameEntry = TkEntry.new(@configsTab)
-		@project.name = TkVariable.new
-		@project.name.value = "Enter Project's name"
-		nameEntry.textvariable = @project.name
+		@projectName = TkVariable.new
+		@projectName.value = "Enter Project's name"
+		nameEntry.textvariable = @projectName
 		nameEntry.place('height' => 25,
             'width'  => 150,
             'x'      => 10,
@@ -236,6 +240,16 @@ class ScrumBook
       )
     }
 
+    @save_click = Proc.new {
+    	saveProject
+    }
+
+    @open_click = Proc.new {
+    	loadProject
+    }
+
+
+
     @exit = Proc.new {
     	if @project.saved?
       	exit
@@ -248,7 +262,7 @@ class ScrumBook
 	        'default' => "yes"
       		)
       	if yes == "yes"
-      		@project.save
+      		saveProject
       	end
 
       	exit
@@ -264,7 +278,7 @@ class ScrumBook
                   'underline' => 0)
     file_menu.add('command',
                   'label'     => "Open...",
-                  'command'   => @menu_click,
+                  'command'   => @open_click,
                   'underline' => 0)
     file_menu.add('command',
                   'label'     => "Close",
@@ -273,7 +287,7 @@ class ScrumBook
     file_menu.add('separator')
     file_menu.add('command',
                   'label'     => "Save",
-                  'command'   => @menu_click,
+                  'command'   => @save_click,
                   'underline' => 0)
     file_menu.add('command',
                   'label'     => "Save As...",
@@ -294,6 +308,33 @@ class ScrumBook
 
   end
 
+  def saveProject
+  	file = File.new "dumpedExample", 'w'
+  	@project.not_saved = true
+  	logger @project.inspect
+		serial = Marshal.dump( @project )
+		logger "serial: " + serial.inspect
+		file.write serial
+		file.close
+	end
+
+	def loadProject
+		file = File.new 'dumpedExample', 'r'
+		serial = file.read
+		file.close
+		@project = Marshal.load( serial )
+		logger @project.inspect
+
+		logger "serial: " + serial.inspect
+
+		refreshView
+	end
+
+
+	def refreshView
+		refreshSprint
+		refreshTaskEditor
+	end
 end
 
 $s = ScrumBook.new

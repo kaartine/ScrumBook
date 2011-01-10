@@ -2,13 +2,7 @@ require './helpfunctions.rb'
 
 class Project
 
-	attr_accessor :name, :sprint, :sprintlength, :members, :tasks
-	@name
-	@sprint
-	@members = []
-	@tasks = []
-	@sprintlength
-	@not_saved
+	attr_accessor :name, :sprint, :sprintlength, :members, :tasks, :not_saved
 
 	def initialize
 		@sprintlength = 10
@@ -31,10 +25,6 @@ class Project
 		@not_saved
 	end
 
-	def save
-		logger "TODO: save function", 1
-	end
-
 	def getActiveSprintsTasks
 		@tasks[@sprint]
 	end
@@ -45,16 +35,12 @@ end
 class Task
 	attr_accessor :committer, :status, :duration, :name
 
-	@committer
-	@status
-	@name
-	@duration = []
-
 	def initialize( name, committer, status )
+		@name = name
 		@committer = committer
 		@status = status
-		@name = name
 		@duration = Array.new
+		@duration.push(0)
 	end
 
 	def ==(id)
