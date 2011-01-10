@@ -165,7 +165,7 @@ class ScrumBook
     sprintEntry.bind("ButtonRelease-1", @changeSprint)
 
     @projectSprint = TkVariable.new
-    @projectSprint.value = "1"
+    @projectSprint.value = "0"
     sprintEntry.textvariable = @projectSprint
     sprintEntry.pack("side" => "left")
 
@@ -373,6 +373,8 @@ class ScrumBook
     logger @project.inspect
 
     logger "serial: " + serial.inspect, 4
+
+    @projectSprint.value = @project.sprint
 
     refreshView
   end

@@ -10,14 +10,6 @@ class Project
     @not_saved = false
 
     @tasks = Hash.new
-
-#    @tasks[0] = Array.new
-#    @tasks[0] << Task.new("scrumbook 0", "JK", "not started")
-#    @tasks[0] << Task.new("dcc 0", "GK", "in progress")
-
-#    @tasks << Array.new
-#    @tasks[1] << Task.new("scrumbook 1", "JK", "not started")
-#    @tasks[1] << Task.new("dcc 1", "GK", "in progress")
   end
 
   def saved?
