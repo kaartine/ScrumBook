@@ -51,6 +51,10 @@ class ScrumBook
 	  		@sprintTaskTree.set( t.name, 'committer', t.committer)
 	  		@sprintTaskTree.set( t.name, 'status', t.status)
 
+	  		@project.sprintlength.to_i.times.each do |i|
+					@sprintTaskTree.set(t.name, "w#{i}", t.duration[i])
+				end
+
  				@sprintTaskTree.tag_bind('clickapple', 'ButtonRelease-1', @changeTask);
 	  	end
 	  	@sprintTaskTree.selection_set(selected_item) if !selected_item.nil?
@@ -71,15 +75,18 @@ class ScrumBook
   end
 
   def updateTaskEditor
-		item = @sprintTaskTree.focus_item()
+  	item = @sprintTaskTree.focus_item()
 		logger "selected: " + item.inspect
 
+		tasks = @project.getActiveSprintsTasks()
+		id = tasks.index(item.id)
+
 		if !item.nil?
-			@taskName.value = item.id
-			@taskCommitter.value = @sprintTaskTree.get(item, 'committer')
-			@taskStatus.value = @sprintTaskTree.get(item, 'status')
+			@taskName.value = tasks[id].name
+			@taskCommitter.value = tasks[id].committer
+			@taskStatus.value = tasks[id].status
 			@project.sprintlength.to_i.times.each  do |i|
-				@taskDuration[i].value = @sprintTaskTree.get(item, "w#{i}")
+				@taskDuration[i].value = tasks[id].duration[i]
 			end
 		end
 	end
@@ -97,11 +104,11 @@ class ScrumBook
 			tasks[id].status = @taskStatus.value
 			@project.sprintlength.to_i.times.each  do |i|
 				tasks[id].duration[i] = @taskDuration[i].value
+				logger "task update w#{i}: " + tasks[id].duration[i]
 			end
 		end
 
 		updateSprint(tasks[id].name)
-
 	end
 
 	def procUpdateTask
@@ -140,7 +147,7 @@ class ScrumBook
 
 		columns = 'committer status'
 		@project.sprintlength.to_i.times.each do |d|
-			columns += " w" + d.to_s()
+			columns += " w#{d}"
 		end
 
 		logger columns
@@ -153,8 +160,8 @@ class ScrumBook
 
 		i = 0
 		@project.sprintlength.to_i.times.each do |d|
-			@sprintTaskTree.heading_configure( 'w' + d.to_s, :text => @days[i])
-			@sprintTaskTree.column_configure( 'w' + d.to_s, :width => 10, :anchor => 'center')
+			@sprintTaskTree.heading_configure( "w#{d}", :text => @days[i])
+			@sprintTaskTree.column_configure( "w#{d}", :width => 10, :anchor => 'center')
 			i+=1
 			if i >= 5
 			 	i = 0
@@ -164,6 +171,9 @@ class ScrumBook
 
 		@sprintTaskTree.pack("side" => "top")
 
+		updateSprint
+
+		# Task edition fields
 		@taskName = TkVariable.new
 		@taskCommitter = TkVariable.new
 		@taskStatus = TkVariable.new
@@ -171,8 +181,6 @@ class ScrumBook
 		@project.sprintlength.to_i.times.each  do |i|
 			@taskDuration << TkVariable.new
 		end
-
-		updateSprint
 
 		taskNameEntry = TkEntry.new(@sprintTab)
 		taskNameEntry.textvariable = @taskName
@@ -185,14 +193,17 @@ class ScrumBook
 		taskStatus = TkEntry.new(@sprintTab) #Tk::Tile::ComboBox.new(@sprintTab)
 		taskStatus.textvariable = @taskStatus
 		taskStatus.pack("side" => "left")
+
 		taskDurationEntry = Array.new
 		@project.sprintlength.to_i.times.each do |i|
 			taskDurationEntry << TkEntry.new(@sprintTab) do
-				width 2
+				width 3
 			end
+			taskDurationEntry[i].textvariable = @taskDuration[i]
 			taskDurationEntry[i].pack("side" => "left")
 		end
 
+		# Task update button
 		TkButton.new(@sprintTab) do
 			text 'Update Task'
 			command( proc {$s.procUpdateTask})
