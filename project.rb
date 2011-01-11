@@ -21,42 +21,55 @@ class Project
   end
 
   def addNewTaskToSprint(newTask)
+    if newTask.name.size == 0
+      raise ArgumentError, "Name is not set"
+    end
+
     logger "before: " + @tasks.inspect
     if !@tasks.has_key?(@sprint)
       @tasks[@sprint] = Array.new
     end
 
-		if newTask.name.size == 0
-			raise ArgumentError, "Name is not set"
-		end
-
     if @tasks[@sprint].index(newTask.name).nil?
       @tasks[@sprint].push(newTask)
       @not_saved = true
-    else
-      nil
     end
-
   end
 
 end
 
 
 class Task
-  attr_accessor :committer, :status, :duration, :name
+  attr_accessor :committer, :status, :name
+  attr_reader :duration
 
   def initialize( name, committer, status )
-    @name = name
-    @committer = committer
-    @status = status
+    @name = name.strip
+    @committer = committer.strip
+    @status = status.strip
     @duration = Array.new
     @duration.push("")
   end
 
   def name=(n)
-  	name = n.trim
+    @name = n.strip
   end
 
+  def committer=(c)
+    @committer = c.strip
+  end
+
+  def status=(s)
+    @status = s.strip
+  end
+
+  def addDuration(i, value)
+    if Integer(value) && value >= 0
+      @duration[i] = value
+    elsif value.size > 0
+      raise ArgumentError, "Duration should be positive integer or zero"
+    end
+  end
 
   def ==(id)
     self.name == id

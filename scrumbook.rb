@@ -82,9 +82,10 @@ class ScrumBook
 
     if !item.nil?
       tasks = @project.getActiveSprintsTasks()
-      id = item.to_s.to_i
+      id = tasks.index(item.id.to_s)
 
       logger "task id: " + id.to_s
+      logger tasks[id].inspect
 
       @taskName.value = tasks[id].name
       @taskCommitter.value = tasks[id].committer
@@ -95,40 +96,39 @@ class ScrumBook
     end
   end
 
-  def updateTask(id)
-    logger "updateTask: " + id.to_s
-
+  def updateTask(item_name)
+    logger "updateTask: " + item_name
     tasks = @project.getActiveSprintsTasks()
-#    id = tasks.index(id)
+    id = tasks.index(item_name)
     logger "task id: " + id.to_s
-
-    id = id.to_i
 
     if !id.nil?
       tasks[id].name = @taskName.value
       tasks[id].committer = @taskCommitter.value
       tasks[id].status = @taskStatus.value
       @project.sprintlength.to_i.times.each  do |i|
-        tasks[id].duration[i] = @taskDuration[i].value
-        logger "task update w#{i}: " + tasks[id].duration[i]
+        tasks[id].addDuration(i, @taskDuration[i].value.to_i)
+        logger "task update w#{i}: " + tasks[id].duration[i].to_s
       end
 
       @project.not_saved = true
     end
 
     refreshSprint(tasks[id].name)
+    refreshTaskEditor
   end
 
   def procUpdateTask
     item = @sprintTaskTree.focus_item()
+    logger "procUpdateTask: " + item.inspect
     updateTask(@sprintTaskTree.focus_item().id) if !item.nil?
   end
 
   def procAddNewTask
     task = Task.new(@taskName.value, @taskCommitter.value, @taskStatus.value)
     @project.sprintlength.to_i.times.each  do |i|
-      task.duration[i] = @taskDuration[i].value
-      logger "task update w#{i}: " + task.duration[i]
+      task.addDuration(i, @taskDuration[i].value.to_i)
+      logger "task update w#{i}: " + task.duration[i].to_s
     end
     begin
 	    if @project.addNewTaskToSprint(task).nil?
@@ -207,7 +207,6 @@ class ScrumBook
 
     @sprintTaskTree.column_configure( 'committer', :width => 70, :anchor => 'center')
     @sprintTaskTree.heading_configure( 'committer', :text => 'Committer')
-#    @sprintTaskTree.column_configure( 'status', :width => 70, :anchor => 'center')
     @sprintTaskTree.heading_configure( 'status', :text => 'Status')
 
     i = 0
