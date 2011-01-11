@@ -130,20 +130,31 @@ class ScrumBook
       task.duration[i] = @taskDuration[i].value
       logger "task update w#{i}: " + task.duration[i]
     end
-    if @project.addNewTaskToSprint(task).nil?
-      Tk.messageBox(
-        'type'    => "ok",
-        'icon'    => "info",
-        'title'   => "Title",
-        'message' => "Task #{@taskName.value} already exists!"
-      )
-    end
+    begin
+	    if @project.addNewTaskToSprint(task).nil?
+	      Tk.messageBox(
+	        'type'    => "ok",
+	        'icon'    => "info",
+	        'title'   => "Title",
+	        'message' => "Task #{@taskName.value} already exists!"
+	      )
+	    end
+	  rescue ArgumentError
+	  	Tk.messageBox(
+	        'type'    => "ok",
+	        'icon'    => "info",
+	        'title'   => "Title",
+	        'message' => "You have to give name to your task!"
+	      )
+		end
     refreshView
   end
 
 
   def createSprintTab(tab)
-    @sprintTab = TkFrame.new(tab)
+	  @sprintTab = Tk::Tile::Frame.new(@sprintTab) {padding "3 3 12 12"}.grid(:sticky => 'nws')
+		TkGrid.columnconfigure @sprintTab, 0, :weight => 1
+		TkGrid.rowconfigure @sprintTab, 0, :weight => 1
 
     @changeSprint = Proc.new {
       refreshSprint
@@ -154,21 +165,35 @@ class ScrumBook
     }
 
     #sprint selector
-    sprintEntry = TkSpinbox.new(@sprintTab) do
-      to 1000
+    sprintLabelVar = TkVariable.new
+		sprintLabel = TkLabel.new(@sprintTab) do
+		  textvariable
+		  borderwidth 5
+#		  font TkFont.new('times 20 bold')
+	#	  foreground  "red"
+		#  relief      "groove"
+		  #pack("side" => "right",  "padx"=> "50", "pady"=> "50")
+		  grid( :column => 0, :row => 0, :sticky => 'wn') #.pack("side" => "left")
+		end
+
+		sprintLabel['textvariable'] = sprintLabelVar
+		sprintLabelVar.value = 'Select your sprint:'
+
+    sprintEntry = TkSpinbox.new(@sprintTab) {
+      to 800
       from 0
       increment 1
       width 10
       command {$s.refreshSprint}
-    end
-
+    }
     sprintEntry.bind("ButtonRelease-1", @changeSprint)
 
     @projectSprint = TkVariable.new
     @projectSprint.value = "0"
     sprintEntry.textvariable = @projectSprint
-    sprintEntry.pack("side" => "left")
+    sprintEntry.grid( :column => 0, :row => 0, :sticky => 'wn',  "padx"=> "3", "pady"=> "30") #.pack("side" => "left")
 
+		# Sprint's task tree
     @sprintTaskTree = Tk::Tile::Treeview.new(@sprintTab)
 
     columns = 'committer status'
@@ -180,8 +205,9 @@ class ScrumBook
     @sprintTaskTree['columns'] = columns.to_s
     logger @sprintTaskTree['columns'], 4
 
-    @sprintTaskTree.column_configure( 'committer', :width => 90, :anchor => 'center')
+    @sprintTaskTree.column_configure( 'committer', :width => 70, :anchor => 'center')
     @sprintTaskTree.heading_configure( 'committer', :text => 'Committer')
+#    @sprintTaskTree.column_configure( 'status', :width => 70, :anchor => 'center')
     @sprintTaskTree.heading_configure( 'status', :text => 'Status')
 
     i = 0
@@ -195,11 +221,13 @@ class ScrumBook
       logger i, 4
     end
 
-    @sprintTaskTree.pack("side" => "top")
+    @sprintTaskTree.grid( :column => 1, :row => 0, :sticky => 'news' ) #.pack("side" => "top")
 
     refreshSprint
 
     # Task edition fields
+    content = Tk::Tile::Frame.new(@sprintTab) {padding "0 0 0 0"}.grid(:column => 1, :row => 1, :sticky => 'news')
+
     @taskName = TkVariable.new
     @taskCommitter = TkVariable.new
     @taskStatus = TkVariable.new
@@ -208,41 +236,40 @@ class ScrumBook
       @taskDuration << TkVariable.new
     end
 
-    taskNameEntry = TkEntry.new(@sprintTab)
+    taskNameEntry = TkEntry.new(content) {width 33}
     taskNameEntry.textvariable = @taskName
-    taskNameEntry.pack("side" => "left")
+    taskNameEntry.grid( :column => 0, :row => 0, :sticky => 'news' ) #.pack("side" => "top") #pack("side" => "left")
 
-    taskCommitter = TkEntry.new(@sprintTab) #Tk::Tile::ComboBox.new(@sprintTab)
+    taskCommitter = TkEntry.new(content) {width 10} #Tk::Tile::ComboBox.new(@sprintTab)
     taskCommitter.textvariable = @taskCommitter
-    taskCommitter.pack("side" => "left")
+    taskCommitter.grid( :column => 1, :row => 0, :sticky => 'news' ) #.pack("side" => "left")
 
-    taskStatus = TkEntry.new(@sprintTab) #Tk::Tile::ComboBox.new(@sprintTab)
+    taskStatus = TkEntry.new(content) {width 15} #Tk::Tile::ComboBox.new(@sprintTab)
     taskStatus.textvariable = @taskStatus
-    taskStatus.pack("side" => "left")
+    taskStatus.grid( :column => 2, :row => 0, :sticky => 'news' ) #.pack("side" => "left")
 
     taskDurationEntry = Array.new
     @project.sprintlength.to_i.times.each do |i|
-      taskDurationEntry << TkEntry.new(@sprintTab) do
+      taskDurationEntry.push(TkEntry.new(content) do
         width 3
-      end
+      end)
       taskDurationEntry[i].textvariable = @taskDuration[i]
-      taskDurationEntry[i].pack("side" => "left")
+      taskDurationEntry[i].grid( :column => 3+i, :row => 0, :sticky => 'news' ) #.pack("side" => "left")
     end
 
     # Task update button
-    TkButton.new(@sprintTab) do
+    TkButton.new(content) {
       text 'Update Task'
       command( proc {$s.procUpdateTask})
-      pack "side" => "left"
-    end
+      #pack "side" => "left"
+    }.grid( :column => 0, :row => 1, :sticky => 'news' ) #
 
     # Add new task button
-    TkButton.new(@sprintTab) do
+    TkButton.new(content) {
       text 'Add new Task'
       command( proc {$s.procAddNewTask})
-      pack "side" => "left"
-    end
-
+      #pack "side" => "left"
+    }.grid( :column => 1, :row => 1, :sticky => 'news' ) #
 
   end
 

@@ -26,6 +26,10 @@ class Project
       @tasks[@sprint] = Array.new
     end
 
+		if newTask.name.size == 0
+			raise ArgumentError, "Name is not set"
+		end
+
     if @tasks[@sprint].index(newTask.name).nil?
       @tasks[@sprint].push(newTask)
       @not_saved = true
@@ -48,6 +52,11 @@ class Task
     @duration = Array.new
     @duration.push("")
   end
+
+  def name=(n)
+  	name = n.trim
+  end
+
 
   def ==(id)
     self.name == id
