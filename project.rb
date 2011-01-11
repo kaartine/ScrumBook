@@ -7,13 +7,13 @@ class Project
   def initialize
     @fileName = ""
     @sprintlength = 10
-    @not_saved = false
+    @not_saved = true
 
     @tasks = Hash.new
   end
 
   def saved?
-    @not_saved
+    !@not_saved
   end
 
   def getActiveSprintsTasks
@@ -28,6 +28,7 @@ class Project
 
     if @tasks[@sprint].index(newTask.name).nil?
       @tasks[@sprint].push(newTask)
+      @not_saved = true
     else
       nil
     end

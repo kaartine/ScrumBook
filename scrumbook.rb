@@ -290,21 +290,30 @@ class ScrumBook
 
 
     @exit = Proc.new {
+    	ret = false
       if @project.saved?
         exit
       else
           yes = Tk.messageBox(
-          'type'    => "yesno",
+          'type'    => "yesnocancel",
           'icon'    => "question",
           'title'   => "Title",
           'message' => "Project is not saved! Save before exiting?",
           'default' => "yes"
           )
         if yes == "yes"
-          saveProject
-        end
+        	if @project.fileName.size > 0
+          	ret = saveProject
+         	else
+         		ret = saveAsProject
+         	end
 
-        exit
+					if ret
+	        	exit
+	        end
+        elsif yes == "no"
+        	exit
+        end
       end
     }
 
@@ -349,9 +358,11 @@ class ScrumBook
 
   def saveAsProject
     fileName = Tk.getSaveFile
-    @project.fileName=fileName
-    logger "SaveAs fileName:" + fileName
-    saveProject
+    if fileName.size > 0
+    	@project.fileName=fileName
+    	logger "SaveAs fileName:" + fileName
+    	saveProject
+    end
   end
 
   def saveProject
@@ -362,6 +373,7 @@ class ScrumBook
     logger "serial: " + serial.inspect, 4
     file.write serial
     file.close
+    true
   end
 
   def loadProject
