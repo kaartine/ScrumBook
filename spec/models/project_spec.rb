@@ -78,4 +78,21 @@ describe Project do
 	  project.getSprintHours.should == 150
 	  project.getSprintHours(2).should == 200
 	end
+
+	it "should be possible to delete tasks from project" do
+	  project = Project.new
+	  project.addNewTaskToSprint(Task.new("first", "C", "open"))
+	  project.addNewTaskToSprint(Task.new("second", "C", "closed"))
+	  project.addNewTaskToSprint(Task.new("third", "C", "closed"))
+	  project.getActiveSprintsTasks.size.should == 3
+    project.deleteTask("second").should == "second"
+    project.deleteTask("second").should == nil
+    project.deleteTask("seconds").should == nil
+    project.getActiveSprintsTasks.size.should == 2
+    project.sprint = 1
+    project.deleteTask("first").should == nil
+    project.sprint = 0
+    project.deleteTask("first").should == "first"
+  end
+
 end

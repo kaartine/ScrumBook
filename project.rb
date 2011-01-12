@@ -57,6 +57,10 @@ class Project
     @sprintHours[index] = hours
   end
 
+  def deleteTask(task)
+    @tasks[@sprint].delete(task) unless @tasks[@sprint].nil?
+  end
+
 end
 
 

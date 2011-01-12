@@ -1,3 +1,4 @@
+require 'yaml'
 require 'tk'
 require 'tkextlib/tile'
 
@@ -80,6 +81,13 @@ class ScrumBook
       @project.sprintlength.times.each  do |i|
         @taskDuration[i].value = tasks[id].duration[i]
       end
+    else
+      @taskName.value = ""
+      @taskCommitter.value = ""
+      @taskStatus.value = ""
+      @project.sprintlength.times.each  do |i|
+        @taskDuration[i].value = ""
+      end
     end
   end
 
@@ -109,7 +117,18 @@ class ScrumBook
     item = @sprintTaskTree.focus_item()
     logger "procUpdateTask: " + item.inspect
     updateTask(@sprintTaskTree.focus_item().id) if !item.nil?
+    refreshView
   end
+
+  def procDeleteTask
+    item = @sprintTaskTree.focus_item()
+    logger "procUpdateTask: " + item.inspect
+    if !item.nil?
+      @project.deleteTask(item.id)
+    end
+    refreshView
+  end
+
 
   def procAddNewTask
     task = Task.new(@taskName.value, @taskCommitter.value, @taskStatus.value)
@@ -250,6 +269,12 @@ class ScrumBook
       command( proc {$s.procAddNewTask})
      }
 
+    # Delete selected task button
+    deleteButton = TkButton.new(@sprintTab) {
+      text 'Delete Task'
+      command( proc {$s.procDeleteTask})
+     }
+
     @sprintTaskTree.grid(        :row => 0, :column => 0, :columnspan => numOfColumns, :rowspan => 10, :sticky => 'news' )
     TkGrid(TkLabel.new(@sprintTab, :text => "Select your sprint:"), :row => 1, :column => numOfColumns + 2, :sticky => 'new')
     sprintEntry.grid(            :row => 1, :column => numOfColumns + 3, :columnspan => 2,:sticky => 'new' )
@@ -275,6 +300,8 @@ class ScrumBook
     updateButton.grid(           :row => 21, :column => numOfColumns + 2, :sticky => 'news' )
     moveUpButton.grid(           :row => 21, :column => numOfColumns + 4, :sticky => 'news' )
     moveDownButton.grid(         :row => 22, :column => numOfColumns + 4, :sticky => 'news' )
+    TkGrid(TkLabel.new(@sprintTab, :text => " "), :row => 23, :column => numOfColumns + 1)
+    deleteButton.grid(           :row => 24, :column => numOfColumns + 4, :sticky => 'news' )
     addNewButton.grid(           :row => 22, :column => numOfColumns + 2, :sticky => 'news' )
 
     TkGrid(TkLabel.new(@sprintTab, :text => ""), :row => 10, :column => 0)
@@ -409,9 +436,9 @@ class ScrumBook
 
   def saveProject
     file = File.new @project.fileName, 'w'
-    @project.not_saved = true
+    @project.not_saved = false
     logger @project.inspect
-    serial = Marshal.dump( @project )
+    serial = YAML.dump( @project )
     logger "serial: " + serial.inspect, 4
     file.write serial
     file.close
@@ -423,7 +450,7 @@ class ScrumBook
     file = File.new fileName, 'r'
     serial = file.read
     file.close
-    @project = Marshal.load( serial )
+    @project = YAML.load( serial )
     logger @project.inspect
 
     logger "serial: " + serial.inspect, 4
