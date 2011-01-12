@@ -211,7 +211,7 @@ class ScrumBook
     @taskStatus = TkVariable.new
     @taskDuration = Array.new
     @project.sprintlength.times.each  do |i|
-      @taskDuration << TkVariable.new
+      @taskDuration.push(TkVariable.new)
     end
 
     taskNameEntry = TkEntry.new(@sprintTab) {width 33}

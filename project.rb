@@ -10,6 +10,8 @@ class Project
     @not_saved = true
 
     @tasks = Hash.new
+    @sprint = 0
+    @sprintHours = Hash.new
   end
 
   def saved?
@@ -25,7 +27,7 @@ class Project
       raise ArgumentError, "Name is not set"
     end
 
-    logger "before: " + @tasks.inspect
+    logger "before: " + @tasks.inspect, 4
     if !@tasks.has_key?(@sprint)
       @tasks[@sprint] = Array.new
     end
@@ -34,6 +36,25 @@ class Project
       @tasks[@sprint].push(newTask)
       @not_saved = true
     end
+  end
+
+  def getSprintHours(sprint=nil)
+    index = @sprint
+    if !sprint.nil?
+      index = sprint
+    end
+    if @sprintHours[index].nil?
+      return 0
+    end
+    @sprintHours[index]
+  end
+
+  def setSprintHours( hours, sprint=nil )
+    index = @sprint
+    if !sprint.nil?
+      index = sprint
+    end
+    @sprintHours[index] = hours
   end
 
 end

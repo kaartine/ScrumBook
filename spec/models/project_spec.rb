@@ -61,4 +61,21 @@ describe Project do
 
 		task.duration.size.should == 2
 	end
+
+	it "should be possible to set and get hours for many different sprints" do
+	  project = Project.new
+	  project.getSprintHours.should == 0
+	  project.setSprintHours(100)
+	  project.sprint = 1
+	  project.setSprintHours(150)
+	  project.setSprintHours(200, 2)
+
+    project.sprint = 0
+	  project.getSprintHours.should == 100
+	  project.sprint = 1
+	  project.getSprintHours.should == 150
+	  project.getSprintHours(0).should == 100
+	  project.getSprintHours.should == 150
+	  project.getSprintHours(2).should == 200
+	end
 end
