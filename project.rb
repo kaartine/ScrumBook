@@ -75,7 +75,6 @@ class Project
       return
     end
     @tasks[@sprint][id1], @tasks[@sprint][id1+1] = @tasks[@sprint][id1+1], @tasks[@sprint][id1]
-
   end
 
 end

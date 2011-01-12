@@ -35,7 +35,6 @@ class ScrumBook
     createMenu
 
     loadProject(fileName) unless fileName.nil?
-    refreshView
   end
 
   def createTabs
@@ -498,6 +497,7 @@ class ScrumBook
     logger "serial: " + serial.inspect, 4
 
     @projectSprint.value = @project.sprint
+    @project.fileName = fileName
 
     refreshView
   end
