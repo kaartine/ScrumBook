@@ -5,3 +5,13 @@ def logger text, level = 3
     print text + "\n"
   end
 end
+
+def numOfColumns
+  # task name, commiter, status, sprints
+  1 + 1 + 1 + @project.sprintlength
+end
+
+
+def selectDay(index)
+  index%5
+end

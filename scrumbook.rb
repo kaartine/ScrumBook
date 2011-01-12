@@ -10,7 +10,7 @@ require './helpfunctions.rb'
 class ScrumBook
 
   def initialize
-    @days = ['ma', 'ti', 'ke', 'to', 'pe']
+    @days = ['Mo', 'Tu', 'We', 'Th', 'Fr']
     @project = Project.new
 
     @root = TkRoot.new
@@ -51,7 +51,7 @@ class ScrumBook
         @sprintTaskTree.set( t.name, 'committer', t.committer)
         @sprintTaskTree.set( t.name, 'status', t.status)
 
-        @project.sprintlength.to_i.times.each do |i|
+        @project.sprintlength.times.each do |i|
           @sprintTaskTree.set(t.name, "w#{i}", t.duration[i])
         end
 
@@ -90,7 +90,7 @@ class ScrumBook
       @taskName.value = tasks[id].name
       @taskCommitter.value = tasks[id].committer
       @taskStatus.value = tasks[id].status
-      @project.sprintlength.to_i.times.each  do |i|
+      @project.sprintlength.times.each  do |i|
         @taskDuration[i].value = tasks[id].duration[i]
       end
     end
@@ -106,7 +106,7 @@ class ScrumBook
       tasks[id].name = @taskName.value
       tasks[id].committer = @taskCommitter.value
       tasks[id].status = @taskStatus.value
-      @project.sprintlength.to_i.times.each  do |i|
+      @project.sprintlength.times.each  do |i|
         tasks[id].addDuration(i, @taskDuration[i].value.to_i)
         logger "task update w#{i}: " + tasks[id].duration[i].to_s
       end
@@ -126,7 +126,7 @@ class ScrumBook
 
   def procAddNewTask
     task = Task.new(@taskName.value, @taskCommitter.value, @taskStatus.value)
-    @project.sprintlength.to_i.times.each  do |i|
+    @project.sprintlength.times.each  do |i|
       task.addDuration(i, @taskDuration[i].value.to_i)
       logger "task update w#{i}: " + task.duration[i].to_s
     end
@@ -153,8 +153,8 @@ class ScrumBook
 
   def createSprintTab(tab)
 	  @sprintTab = Tk::Tile::Frame.new(@sprintTab) {padding "3 3 12 12"}.grid(:sticky => 'nws')
-		TkGrid.columnconfigure @sprintTab, 0, :weight => 1
-		TkGrid.rowconfigure @sprintTab, 0, :weight => 1
+		TkGrid.columnconfigure( @sprintTab, 0, :weight => 1 )
+		TkGrid.rowconfigure( @sprintTab, 0, :weight => 1 )
 
     @changeSprint = Proc.new {
       refreshSprint
@@ -165,20 +165,6 @@ class ScrumBook
     }
 
     #sprint selector
-    sprintLabelVar = TkVariable.new
-		sprintLabel = TkLabel.new(@sprintTab) do
-		  textvariable
-		  borderwidth 5
-#		  font TkFont.new('times 20 bold')
-	#	  foreground  "red"
-		#  relief      "groove"
-		  #pack("side" => "right",  "padx"=> "50", "pady"=> "50")
-		  grid( :column => 0, :row => 0, :sticky => 'wn') #.pack("side" => "left")
-		end
-
-		sprintLabel['textvariable'] = sprintLabelVar
-		sprintLabelVar.value = 'Select your sprint:'
-
     sprintEntry = TkSpinbox.new(@sprintTab) {
       to 800
       from 0
@@ -191,13 +177,17 @@ class ScrumBook
     @projectSprint = TkVariable.new
     @projectSprint.value = "0"
     sprintEntry.textvariable = @projectSprint
-    sprintEntry.grid( :column => 0, :row => 0, :sticky => 'wn',  "padx"=> "3", "pady"=> "30") #.pack("side" => "left")
+
+    # Hours availble for current sprint
+    @hoursAvailableVar = TkVariable.new
+    hoursAvailable = TkEntry.new(@sprintTab) {width 5}
+    hoursAvailable.textvariable = @hoursAvailableVar
 
 		# Sprint's task tree
     @sprintTaskTree = Tk::Tile::Treeview.new(@sprintTab)
 
     columns = 'committer status'
-    @project.sprintlength.to_i.times.each do |d|
+    @project.sprintlength.times.each do |d|
       columns += " w#{d}"
     end
 
@@ -208,67 +198,99 @@ class ScrumBook
     @sprintTaskTree.column_configure( 'committer', :width => 70, :anchor => 'center')
     @sprintTaskTree.heading_configure( 'committer', :text => 'Committer')
     @sprintTaskTree.heading_configure( 'status', :text => 'Status')
+    logger @sprintTaskTree.inspect
 
-    i = 0
-    @project.sprintlength.to_i.times.each do |d|
-      @sprintTaskTree.heading_configure( "w#{d}", :text => @days[i])
+    @project.sprintlength.times.each do |d|
+      @sprintTaskTree.heading_configure( "w#{d}", :text => @days[selectDay(d)])
       @sprintTaskTree.column_configure( "w#{d}", :width => 10, :anchor => 'center')
-      i+=1
-      if i >= 5
-         i = 0
-      end
-      logger i, 4
     end
 
-    @sprintTaskTree.grid( :column => 1, :row => 0, :sticky => 'news' ) #.pack("side" => "top")
-
-    refreshSprint
-
     # Task edition fields
-    content = Tk::Tile::Frame.new(@sprintTab) {padding "0 0 0 0"}.grid(:column => 1, :row => 1, :sticky => 'news')
-
     @taskName = TkVariable.new
     @taskCommitter = TkVariable.new
     @taskStatus = TkVariable.new
     @taskDuration = Array.new
-    @project.sprintlength.to_i.times.each  do |i|
+    @project.sprintlength.times.each  do |i|
       @taskDuration << TkVariable.new
     end
 
-    taskNameEntry = TkEntry.new(content) {width 33}
+    taskNameEntry = TkEntry.new(@sprintTab) {width 33}
     taskNameEntry.textvariable = @taskName
-    taskNameEntry.grid( :column => 0, :row => 0, :sticky => 'news' ) #.pack("side" => "top") #pack("side" => "left")
 
-    taskCommitter = TkEntry.new(content) {width 10} #Tk::Tile::ComboBox.new(@sprintTab)
+    taskCommitter = TkEntry.new(@sprintTab) #{width 10} #Tk::Tile::ComboBox.new(@sprintTab)
     taskCommitter.textvariable = @taskCommitter
-    taskCommitter.grid( :column => 1, :row => 0, :sticky => 'news' ) #.pack("side" => "left")
 
-    taskStatus = TkEntry.new(content) {width 15} #Tk::Tile::ComboBox.new(@sprintTab)
+    taskStatus = TkEntry.new(@sprintTab) #{width 15} #Tk::Tile::ComboBox.new(@sprintTab)
     taskStatus.textvariable = @taskStatus
-    taskStatus.grid( :column => 2, :row => 0, :sticky => 'news' ) #.pack("side" => "left")
 
     taskDurationEntry = Array.new
-    @project.sprintlength.to_i.times.each do |i|
-      taskDurationEntry.push(TkEntry.new(content) do
+    @project.sprintlength.times.each do |i|
+      taskDurationEntry.push(TkEntry.new(@sprintTab) do
         width 3
       end)
       taskDurationEntry[i].textvariable = @taskDuration[i]
-      taskDurationEntry[i].grid( :column => 3+i, :row => 0, :sticky => 'news' ) #.pack("side" => "left")
     end
 
     # Task update button
-    TkButton.new(content) {
+    copyButton = TkButton.new(@sprintTab) {
+      text 'Copy open tasks'
+      command( proc {$s.procUpdateTask})
+    }
+    emptyLabel = TkLabel.new(@sprintTab)
+    emptyLabel2 = TkLabel.new(@sprintTab)
+
+
+    # Task update button
+    updateButton = TkButton.new(@sprintTab) {
       text 'Update Task'
       command( proc {$s.procUpdateTask})
-      #pack "side" => "left"
-    }.grid( :column => 0, :row => 1, :sticky => 'news' ) #
+    }
+
+    # Task update button
+    moveUpButton = TkButton.new(@sprintTab) {
+      text 'Move up'
+      command( proc {$s.procUpdateTask})
+        }
+    # Task update button
+    moveDownButton = TkButton.new(@sprintTab) {
+      text 'Move Down'
+      command( proc {$s.procUpdateTask})
+     }
 
     # Add new task button
-    TkButton.new(content) {
+    addNewButton = TkButton.new(@sprintTab) {
       text 'Add new Task'
       command( proc {$s.procAddNewTask})
-      #pack "side" => "left"
-    }.grid( :column => 1, :row => 1, :sticky => 'news' ) #
+     }
+
+    @sprintTaskTree.grid(        :row => 0, :column => 0, :columnspan => numOfColumns, :rowspan => 10, :sticky => 'news' )
+    TkGrid(TkLabel.new(@sprintTab, :text => "Select your sprint:"), :row => 1, :column => numOfColumns + 2, :sticky => 'new')
+    sprintEntry.grid(            :row => 1, :column => numOfColumns + 3, :columnspan => 2,:sticky => 'new' )
+    TkGrid(TkLabel.new(@sprintTab, :text => " "), :row => 1, :column => numOfColumns + 1)
+    TkGrid(TkLabel.new(@sprintTab, :text => " "), :row => 0, :column => numOfColumns + 3)
+    TkGrid(TkLabel.new(@sprintTab, :text => "Hours for Sprint:"), :row => 2, :column => numOfColumns + 2)
+    hoursAvailable.grid(         :row => 2, :column => numOfColumns + 3, :columnspan => 2, :sticky => 'new' )
+    copyButton.grid(             :row => 4, :column => numOfColumns + 2, :sticky => 'new' )
+
+    TkGrid(TkLabel.new(@sprintTab, :text => "Task name"), :row => 20, :column => 0)
+    taskNameEntry.grid(                                   :row => 21, :column => 0, :sticky => 'news' )
+    TkGrid(TkLabel.new(@sprintTab, :text => "Committer"), :row => 20, :column => 1)
+    taskCommitter.grid(                                   :row => 21, :column => 1, :sticky => 'news' )
+    TkGrid(TkLabel.new(@sprintTab, :text => "Status"),    :row => 20, :column => 2)
+    taskStatus.grid(                                      :row => 21, :column => 2, :sticky => 'news' )
+    @project.sprintlength.times.each do |i|
+      TkGrid(TkLabel.new(@sprintTab, :text => @days[selectDay(i)]),  :row => 20, :column => 3+i)
+    end
+    @project.sprintlength.times.each do |i|
+      taskDurationEntry[i].grid(                          :row => 21, :column => 3+i, :sticky => 'news' )
+    end
+
+    updateButton.grid(           :row => 21, :column => numOfColumns + 2, :sticky => 'news' )
+    moveUpButton.grid(           :row => 21, :column => numOfColumns + 4, :sticky => 'news' )
+    moveDownButton.grid(         :row => 22, :column => numOfColumns + 4, :sticky => 'news' )
+    addNewButton.grid(           :row => 22, :column => numOfColumns + 2, :sticky => 'news' )
+
+    TkGrid(TkLabel.new(@sprintTab, :text => ""), :row => 10, :column => 0)
 
   end
 
