@@ -1,0 +1,12 @@
+ScrumBook is light weight cross platform tool to handle your daily scrums and keep track of your team's progress.
+Written with Ruby with help of Tk library.
+
+Features:
+  * Open/Save project to file
+    * Saved file is human readable YAML format
+  * Burn down chart
+  * Open file that is given as argument
+  * Easy to create new task to sprint
+  * Easy update of tasks
+  * Easy navigation between sprints
+  * One click coping of open tasks to new sprint

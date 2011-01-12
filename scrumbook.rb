@@ -1,3 +1,23 @@
+# Copyright (C) 2011 by Jukka Kaartinen
+
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+# THE SOFTWARE.
+
 require 'yaml'
 require 'tk'
 require 'tkextlib/tile'
@@ -17,11 +37,11 @@ class ScrumBook
         fileName = a
       else
         Tk.messageBox(
-	        'type'    => "ok",
-	        'icon'    => "info",
-	        'title'   => "Title",
-	        'message' => "File \"#{a}\" doesn't exist!"
-	      )
+          'type'    => "ok",
+          'icon'    => "info",
+          'title'   => "Title",
+          'message' => "File \"#{a}\" doesn't exist!"
+        )
       end
     end
 
@@ -137,11 +157,11 @@ class ScrumBook
       refreshView
     else
       Tk.messageBox(
-	        'type'    => "ok",
-	        'icon'    => "info",
-	        'title'   => "Title",
-	        'message' => "Task #{@taskName.value} already exists!"
-	      )
+          'type'    => "ok",
+          'icon'    => "info",
+          'title'   => "Title",
+          'message' => "Task #{@taskName.value} already exists!"
+        )
     end
   end
 
@@ -162,22 +182,22 @@ class ScrumBook
       logger "task update w#{i}: " + task.duration[i].to_s
     end
     begin
-	    if @project.addNewTaskToSprint(task).nil?
-	      Tk.messageBox(
-	        'type'    => "ok",
-	        'icon'    => "info",
-	        'title'   => "Title",
-	        'message' => "Task #{@taskName.value} already exists!"
-	      )
-	    end
-	  rescue ArgumentError
-	  	Tk.messageBox(
-	        'type'    => "ok",
-	        'icon'    => "info",
-	        'title'   => "Title",
-	        'message' => "You have to give name to your task!"
-	      )
-		end
+      if @project.addNewTaskToSprint(task).nil?
+        Tk.messageBox(
+          'type'    => "ok",
+          'icon'    => "info",
+          'title'   => "Title",
+          'message' => "Task #{@taskName.value} already exists!"
+        )
+      end
+    rescue ArgumentError
+      Tk.messageBox(
+          'type'    => "ok",
+          'icon'    => "info",
+          'title'   => "Title",
+          'message' => "You have to give name to your task!"
+        )
+    end
     refreshView
   end
 
@@ -202,9 +222,9 @@ class ScrumBook
   end
 
   def createSprintTab(tab)
-	  @sprintTab = Tk::Tile::Frame.new(@sprintTab) {padding "3 3 12 12"}.grid(:sticky => 'nws')
-		TkGrid.columnconfigure( @sprintTab, 0, :weight => 1 )
-		TkGrid.rowconfigure( @sprintTab, 0, :weight => 1 )
+    @sprintTab = Tk::Tile::Frame.new(@sprintTab) {padding "3 3 12 12"}.grid(:sticky => 'nws')
+    TkGrid.columnconfigure( @sprintTab, 0, :weight => 1 )
+    TkGrid.rowconfigure( @sprintTab, 0, :weight => 1 )
 
     @changeSprint = Proc.new {
       refreshSprint
@@ -233,7 +253,7 @@ class ScrumBook
     hoursAvailable = TkEntry.new(@sprintTab) {width 5}
     hoursAvailable.textvariable = @hoursAvailableVar
 
-		# Sprint's task tree
+    # Sprint's task tree
     @sprintTaskTree = Tk::Tile::Treeview.new(@sprintTab)
 
     columns = 'committer status'
@@ -395,7 +415,7 @@ class ScrumBook
 
 
     @exit = Proc.new {
-    	ret = false
+      ret = false
       if @project.saved?
         exit
       else
@@ -407,17 +427,17 @@ class ScrumBook
           'default' => "yes"
           )
         if yes == "yes"
-        	if @project.fileName.size > 0
-          	ret = saveProject
-         	else
-         		ret = saveAsProject
-         	end
+          if @project.fileName.size > 0
+            ret = saveProject
+           else
+             ret = saveAsProject
+           end
 
-					if ret
-	        	exit
-	        end
+          if ret
+            exit
+          end
         elsif yes == "no"
-        	exit
+          exit
         end
       end
     }
@@ -472,9 +492,9 @@ class ScrumBook
   def saveAsProject
     fileName = Tk.getSaveFile
     if fileName.size > 0
-    	@project.fileName=fileName
-    	logger "SaveAs fileName:" + fileName
-    	saveProject
+      @project.fileName=fileName
+      logger "SaveAs fileName:" + fileName
+      saveProject
     end
   end
 
