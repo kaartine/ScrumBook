@@ -182,6 +182,23 @@ class ScrumBook
     refreshView
   end
 
+  def procMoveTaskUp
+    item = @sprintTaskTree.focus_item()
+    logger "procMoveTaskUp: " + item.inspect
+    if !item.nil?
+      @project.moveTaskUp(item.id)
+    end
+    refreshView
+  end
+
+  def procMoveTaskDown
+    item = @sprintTaskTree.focus_item()
+    logger "procMoveTaskDown: " + item.inspect
+    if !item.nil?
+      @project.moveTaskDown(item.id)
+    end
+    refreshView
+  end
 
   def createSprintTab(tab)
 	  @sprintTab = Tk::Tile::Frame.new(@sprintTab) {padding "3 3 12 12"}.grid(:sticky => 'nws')
@@ -281,12 +298,12 @@ class ScrumBook
     # Task update button
     moveUpButton = TkButton.new(@sprintTab) {
       text 'Move up'
-      command( proc {$s.procUpdateTask})
+      command( proc {$s.procMoveTaskUp})
         }
     # Task update button
     moveDownButton = TkButton.new(@sprintTab) {
       text 'Move Down'
-      command( proc {$s.procUpdateTask})
+      command( proc {$s.procMoveTaskDown})
      }
 
     # Add new task button

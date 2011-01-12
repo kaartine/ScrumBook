@@ -61,6 +61,23 @@ class Project
     @tasks[@sprint].delete(task) unless @tasks[@sprint].nil?
   end
 
+  def moveTaskUp(name)
+    id1 = @tasks[@sprint].index(name)
+    if id1 == 0 || @tasks[@sprint].size-1 <= 1
+      return
+    end
+    @tasks[@sprint][id1-1], @tasks[@sprint][id1] = @tasks[@sprint][id1], @tasks[@sprint][id1-1]
+  end
+
+  def moveTaskDown(name)
+    id1 = @tasks[@sprint].index(name)
+    if id1 == @tasks[@sprint].size-1 || @tasks[@sprint].size-1 <= 1
+      return
+    end
+    @tasks[@sprint][id1], @tasks[@sprint][id1+1] = @tasks[@sprint][id1+1], @tasks[@sprint][id1]
+
+  end
+
 end
 
 
