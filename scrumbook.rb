@@ -61,19 +61,6 @@ class ScrumBook
 
       logger "project: " + @project.inspect
     end
-
-#    @sprintTaskTree.insert('', 'end', :id => 'widgets', :text => 'Widget Tour')
-#    @sprintTaskTree.insert('', 0, :id => 'gallery', :text => 'Applications')
-#    item = @sprintTaskTree.insert('', 'end', :text => 'Tutorial')
-#    @sprintTaskTree.insert( 'widgets', 'end', :text => 'Canvas')
-#    @sprintTaskTree.insert( item, 'end', :text => 'Tree')
-#    @sprintTaskTree.set('widgets', 'committer', 'JK'); # or item.set('size', '12KB')
-#    size = @sprintTaskTree.get('widgets', 'committer');  # or item.get('size')
-#    @sprintTaskTree.insert('', 'end', :text => 'Listbox', :values => ['GK','Done','0'])
-
-#    @sprintTaskTree.itemconfigure('widgets', 'open', true); # or item['open'] = true
-#    isopen = @sprintTaskTree.itemcget('widgets', 'open');   # or isopen = item['open']
-
   end
 
   def refreshTaskEditor
@@ -319,11 +306,7 @@ class ScrumBook
     }
 
     @save_click = Proc.new {
-      if @project.fileName.size > 0
-        saveProject
-      else
-        saveAsProject
-      end
+      saveClick
     }
 
     @saveAs_click = Proc.new {
@@ -335,6 +318,9 @@ class ScrumBook
       loadProject
     }
 
+    @new_click = Proc.new {
+      newProject
+    }
 
 
     @exit = Proc.new {
@@ -370,7 +356,7 @@ class ScrumBook
 
     file_menu.add('command',
                   'label'     => "New...",
-                  'command'   => @menu_click,
+                  'command'   => @new_click,
                   'underline' => 0)
     file_menu.add('command',
                   'label'     => "Open...",
@@ -402,6 +388,14 @@ class ScrumBook
 
     @root.menu(menu_bar)
 
+  end
+
+  def saveClick
+    if @project.fileName.size > 0
+      saveProject
+    else
+      saveAsProject
+    end
   end
 
   def saveAsProject
@@ -436,6 +430,26 @@ class ScrumBook
 
     @projectSprint.value = @project.sprint
 
+    refreshView
+  end
+
+  def newProject
+    if !@project.saved?
+      answer = Tk.messageBox(
+        'type'    => "yesnocancel",
+        'icon'    => "question",
+        'title'   => "Title",
+        'message' => "Creating new project but project is not saved! Save project or not. You can also calcel project creation.",
+        'default' => "yes"
+        )
+      if answer == "yes"
+        saveClick
+      elsif answer == "cancel"
+        return
+      end
+    end
+
+    @project = Project.new
     refreshView
   end
 
