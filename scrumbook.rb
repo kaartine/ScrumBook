@@ -20,7 +20,7 @@ class ScrumBook
 	        'type'    => "ok",
 	        'icon'    => "info",
 	        'title'   => "Title",
-	        'message' => "File \"#{a}\" doens't exist!"
+	        'message' => "File \"#{a}\" doesn't exist!"
 	      )
       end
     end
@@ -188,6 +188,7 @@ class ScrumBook
       @project.moveTaskUp(item.id)
     end
     refreshView
+    @sprintTaskTree.focus_item(item)
   end
 
   def procMoveTaskDown
@@ -197,6 +198,7 @@ class ScrumBook
       @project.moveTaskDown(item.id)
     end
     refreshView
+    @sprintTaskTree.focus_item(item)
   end
 
   def createSprintTab(tab)
