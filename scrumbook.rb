@@ -11,6 +11,20 @@ require './helpfunctions.rb'
 class ScrumBook
 
   def initialize
+    fileName = nil
+    ARGV.each do|a|
+      if File.exists?(a)
+        fileName = a
+      else
+        Tk.messageBox(
+	        'type'    => "ok",
+	        'icon'    => "info",
+	        'title'   => "Title",
+	        'message' => "File \"#{a}\" doens't exist!"
+	      )
+      end
+    end
+
     @days = ['Mo', 'Tu', 'We', 'Th', 'Fr']
     @project = Project.new
 
@@ -19,6 +33,9 @@ class ScrumBook
 
     createTabs
     createMenu
+
+    loadProject(fileName) unless fileName.nil?
+    refreshView
   end
 
   def createTabs
@@ -31,9 +48,9 @@ class ScrumBook
 
     @burnDownTab = TkFrame.new(tab)
 
-    tab.add @configsTab , :text => 'Configs'
     tab.add @sprintTab, :text => 'Sprint'
     tab.add @burnDownTab, :text => 'Burn Down'
+    tab.add @configsTab , :text => 'Configs'
 
     tab.pack("expand" => "1", "fill" => "both")
   end
@@ -116,8 +133,17 @@ class ScrumBook
   def procUpdateTask
     item = @sprintTaskTree.focus_item()
     logger "procUpdateTask: " + item.inspect
-    updateTask(@sprintTaskTree.focus_item().id) if !item.nil?
-    refreshView
+    if @project.getActiveSprintsTasks().index(@taskName.value).nil?
+      updateTask(@sprintTaskTree.focus_item().id) if !item.nil?
+      refreshView
+    else
+      Tk.messageBox(
+	        'type'    => "ok",
+	        'icon'    => "info",
+	        'title'   => "Title",
+	        'message' => "Task #{@taskName.value} already exists!"
+	      )
+    end
   end
 
   def procDeleteTask
@@ -342,7 +368,7 @@ class ScrumBook
 
 
     @open_click = Proc.new {
-      loadProject
+      loadProject(Tk.getOpenFile)
     }
 
     @new_click = Proc.new {
@@ -445,8 +471,7 @@ class ScrumBook
     true
   end
 
-  def loadProject
-    fileName = Tk.getOpenFile
+  def loadProject(fileName)
     file = File.new fileName, 'r'
     serial = file.read
     file.close
