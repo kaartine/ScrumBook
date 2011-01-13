@@ -46,13 +46,16 @@ class ScrumBook
     end
 
     @days = ['Mo', 'Tu', 'We', 'Th', 'Fr']
+    @fileEnding = '.scb'
+    @fileTypes = [['ScrumBook Files', ["*#{@fileEnding}"]],
+                  ['All Files', ['*']]]
     @project = Project.new
 
     @root = TkRoot.new
     @root.title = "ScrumBook"
 
-    createTabs
     createMenu
+    createTabs
 
     loadProject(fileName) unless fileName.nil?
   end
@@ -60,6 +63,7 @@ class ScrumBook
   def createTabs
     tab = Tk::Tile::Notebook.new(@root) do
       width 1000
+      height 600
     end
 
     createConfigTab(tab)
@@ -82,9 +86,11 @@ class ScrumBook
     items = @sprintTaskTree.children('')
     @sprintTaskTree.delete(items)
 
+    use_as_selected = selected_item
+    temp = nil?
     if @project.tasks[id]
       @project.tasks[id].each do |t|
-        @sprintTaskTree.insert('', 'end', :id => t.name, :text => t.name, :tags => ['clickapple'])
+        temp = @sprintTaskTree.insert('', 'end', :id => t.name, :text => t.name, :tags => ['clickapple'])
         @sprintTaskTree.set( t.name, 'committer', t.committer)
         @sprintTaskTree.set( t.name, 'status', t.status)
 
@@ -92,9 +98,15 @@ class ScrumBook
           @sprintTaskTree.set(t.name, "w#{i}", t.duration[i])
         end
 
-         @sprintTaskTree.tag_bind('clickapple', 'ButtonRelease-1', @changeTask);
+        @sprintTaskTree.tag_bind('clickapple', 'ButtonRelease-1', @changeTask);
+
+        if( selected_item == t.name )
+          use_as_selected = temp
+          logger "found new selection: " + temp.inspect
+        end
       end
-      @sprintTaskTree.selection_set(selected_item) if !selected_item.nil?
+
+      @sprintTaskTree.focus_item(use_as_selected)
 
       logger "project: " + @project.inspect
     end
@@ -144,23 +156,23 @@ class ScrumBook
 
       @project.not_saved = true
     end
-
-    refreshSprint(tasks[id].name)
-    refreshTaskEditor
   end
 
   def procUpdateTask
     item = @sprintTaskTree.focus_item()
     logger "procUpdateTask: " + item.inspect
-    if @project.getActiveSprintsTasks().index(@taskName.value).nil?
+
+    tasks = @project.getActiveSprintsTasks()
+    index = tasks.index(item.id)
+    if tasks[index].name == @taskName.value || tasks.index(@taskName.value).nil?
       updateTask(@sprintTaskTree.focus_item().id) if !item.nil?
-      refreshView
+      refreshView(tasks[index].name)
     else
       Tk.messageBox(
           'type'    => "ok",
           'icon'    => "info",
           'title'   => "Title",
-          'message' => "Task #{@taskName.value} already exists!"
+          'message' => "Task \"#{@taskName.value}\" already exists!"
         )
     end
   end
@@ -207,8 +219,7 @@ class ScrumBook
     if !item.nil?
       @project.moveTaskUp(item.id)
     end
-    refreshView
-    @sprintTaskTree.focus_item(item)
+    refreshView(item)
   end
 
   def procMoveTaskDown
@@ -217,8 +228,7 @@ class ScrumBook
     if !item.nil?
       @project.moveTaskDown(item.id)
     end
-    refreshView
-    @sprintTaskTree.focus_item(item)
+    refreshView(item)
   end
 
   def createSprintTab(tab)
@@ -240,7 +250,7 @@ class ScrumBook
       from 0
       increment 1
       width 10
-      command {$s.refreshSprint}
+      command {$s.refreshView}
     }
     sprintEntry.bind("ButtonRelease-1", @changeSprint)
 
@@ -340,13 +350,13 @@ class ScrumBook
      }
 
     @sprintTaskTree.grid(        :row => 0, :column => 0, :columnspan => numOfColumns, :rowspan => 10, :sticky => 'news' )
-    TkGrid(TkLabel.new(@sprintTab, :text => "Select your sprint:"), :row => 1, :column => numOfColumns + 2, :sticky => 'new')
-    sprintEntry.grid(            :row => 1, :column => numOfColumns + 3, :columnspan => 2,:sticky => 'new' )
+    TkGrid(TkLabel.new(@sprintTab, :text => "Select your sprint:"), :row => 1, :column => numOfColumns + 2, :sticky => 'ne')
+    sprintEntry.grid(            :row => 1, :column => numOfColumns + 3, :columnspan => 2,:sticky => 'nw' )
     TkGrid(TkLabel.new(@sprintTab, :text => " "), :row => 1, :column => numOfColumns + 1)
     TkGrid(TkLabel.new(@sprintTab, :text => " "), :row => 0, :column => numOfColumns + 3)
-    TkGrid(TkLabel.new(@sprintTab, :text => "Hours for Sprint:"), :row => 2, :column => numOfColumns + 2)
-    hoursAvailable.grid(         :row => 2, :column => numOfColumns + 3, :columnspan => 2, :sticky => 'new' )
-    copyButton.grid(             :row => 4, :column => numOfColumns + 2, :sticky => 'new' )
+    TkGrid(TkLabel.new(@sprintTab, :text => "Hours for Sprint:"), :row => 2, :column => numOfColumns + 2, :sticky => 'ne')
+    hoursAvailable.grid(         :row => 2, :column => numOfColumns + 3, :columnspan => 2, :sticky => 'nw' )
+    copyButton.grid(             :row => 4, :column => numOfColumns + 2, :sticky => 'ne' )
 
     TkGrid(TkLabel.new(@sprintTab, :text => "Task name"), :row => 20, :column => 0)
     taskNameEntry.grid(                                   :row => 21, :column => 0, :sticky => 'news' )
@@ -361,12 +371,12 @@ class ScrumBook
       taskDurationEntry[i].grid(                          :row => 21, :column => 3+i, :sticky => 'news' )
     end
 
-    updateButton.grid(           :row => 21, :column => numOfColumns + 2, :sticky => 'news' )
-    moveUpButton.grid(           :row => 21, :column => numOfColumns + 4, :sticky => 'news' )
-    moveDownButton.grid(         :row => 22, :column => numOfColumns + 4, :sticky => 'news' )
+    updateButton.grid(           :row => 21, :column => numOfColumns + 2, :sticky => 'nw' )
+    moveUpButton.grid(           :row => 21, :column => numOfColumns + 4, :sticky => 'nw' )
+    moveDownButton.grid(         :row => 22, :column => numOfColumns + 4, :sticky => 'nw' )
     TkGrid(TkLabel.new(@sprintTab, :text => " "), :row => 23, :column => numOfColumns + 1)
-    deleteButton.grid(           :row => 24, :column => numOfColumns + 4, :sticky => 'news' )
-    addNewButton.grid(           :row => 22, :column => numOfColumns + 2, :sticky => 'news' )
+    deleteButton.grid(           :row => 24, :column => numOfColumns + 4, :sticky => 'nw' )
+    addNewButton.grid(           :row => 22, :column => numOfColumns + 2, :sticky => 'nw' )
 
     TkGrid(TkLabel.new(@sprintTab, :text => ""), :row => 10, :column => 0)
 
@@ -406,7 +416,7 @@ class ScrumBook
 
 
     @open_click = Proc.new {
-      loadProject(Tk.getOpenFile)
+      loadProject(Tk.getOpenFile(:filetypes => @fileTypes))
     }
 
     @new_click = Proc.new {
@@ -490,8 +500,10 @@ class ScrumBook
   end
 
   def saveAsProject
-    fileName = Tk.getSaveFile
+    fileName = Tk.getSaveFile(:filetypes => @fileTypes )
     if fileName.size > 0
+      fileName += @fileEnding if fileName.match(@fileEnding).nil?
+
       @project.fileName=fileName
       logger "SaveAs fileName:" + fileName
       saveProject
@@ -510,6 +522,9 @@ class ScrumBook
   end
 
   def loadProject(fileName)
+    if !File.exist?(fileName)
+      return
+    end
     file = File.new fileName, 'r'
     serial = file.read
     file.close
@@ -545,8 +560,8 @@ class ScrumBook
   end
 
 
-  def refreshView
-    refreshSprint
+  def refreshView(selected_item = nil?)
+    refreshSprint(selected_item)
     refreshTaskEditor
   end
 end
