@@ -31,6 +31,13 @@ require './helpfunctions.rb'
 class ScrumBook
 
   def initialize
+    # Constants
+    @days = ['Mo', 'Tu', 'We', 'Th', 'Fr']
+    @fileEnding = '.scb'
+    @fileTypes = [['ScrumBook Files', ["*#{@fileEnding}"]],
+                  ['All Files', ['*']]]
+    @title = 'ScrumBook'
+
     fileName = nil
     ARGV.each do|a|
       if File.exists?(a)
@@ -45,17 +52,24 @@ class ScrumBook
       end
     end
 
-    @days = ['Mo', 'Tu', 'We', 'Th', 'Fr']
-    @fileEnding = '.scb'
-    @fileTypes = [['ScrumBook Files', ["*#{@fileEnding}"]],
-                  ['All Files', ['*']]]
+    # Initial project
     @project = Project.new
 
     @root = TkRoot.new
-    @root.title = "ScrumBook"
+    @root.title = @title
 
     createMenu
     createTabs
+
+    # Keyboard shortcuts
+    @root.bind( "Control-s", @save_click )
+    @root.bind( "Control-o", @open_click )
+    @root.bind( "Control-a", @saveAs_click )
+    @root.bind( "Control-n", @new_click )
+    @root.bind( "Control-x", @exit_click )
+    @root.bind( "Control-u", proc {$s.procUpdateTask} )
+    @root.bind( "Control-t", proc {$s.procAddNewTask} )
+    @root.bind( "Control-d", proc {$s.procDeleteTask} )
 
     loadProject(fileName) unless fileName.nil?
   end
@@ -146,6 +160,7 @@ class ScrumBook
     logger "task id: " + id.to_s
 
     if !id.nil?
+      tasks[id].project = @project
       tasks[id].name = @taskName.value
       tasks[id].committer = @taskCommitter.value
       tasks[id].status = @taskStatus.value
@@ -153,8 +168,6 @@ class ScrumBook
         tasks[id].addDuration(i, @taskDuration[i].value.to_i)
         logger "task update w#{i}: " + tasks[id].duration[i].to_s
       end
-
-      @project.not_saved = true
     end
   end
 
@@ -188,7 +201,7 @@ class ScrumBook
 
 
   def procAddNewTask
-    task = Task.new(@taskName.value, @taskCommitter.value, @taskStatus.value)
+    task = Task.new(@taskName.value, @taskCommitter.value, @taskStatus.value, @project)
     @project.sprintlength.times.each  do |i|
       task.addDuration(i, @taskDuration[i].value.to_i)
       logger "task update w#{i}: " + task.duration[i].to_s
@@ -271,7 +284,6 @@ class ScrumBook
       columns += " w#{d}"
     end
 
-    logger columns
     @sprintTaskTree['columns'] = columns.to_s
     logger @sprintTaskTree['columns'], 4
 
@@ -323,6 +335,7 @@ class ScrumBook
     # Task update button
     updateButton = TkButton.new(@sprintTab) {
       text 'Update Task'
+      underline 0
       command( proc {$s.procUpdateTask})
     }
 
@@ -340,12 +353,14 @@ class ScrumBook
     # Add new task button
     addNewButton = TkButton.new(@sprintTab) {
       text 'Add new Task'
+      underline 8
       command( proc {$s.procAddNewTask})
      }
 
     # Delete selected task button
     deleteButton = TkButton.new(@sprintTab) {
       text 'Delete Task'
+      underline 0
       command( proc {$s.procDeleteTask})
      }
 
@@ -354,7 +369,7 @@ class ScrumBook
     sprintEntry.grid(            :row => 1, :column => numOfColumns + 3, :columnspan => 2,:sticky => 'nw' )
     TkGrid(TkLabel.new(@sprintTab, :text => " "), :row => 1, :column => numOfColumns + 1)
     TkGrid(TkLabel.new(@sprintTab, :text => " "), :row => 0, :column => numOfColumns + 3)
-    TkGrid(TkLabel.new(@sprintTab, :text => "Hours for Sprint:"), :row => 2, :column => numOfColumns + 2, :sticky => 'ne')
+    TkGrid(TkLabel.new(@sprintTab, :text => "Team velocity:"), :row => 2, :column => numOfColumns + 2, :sticky => 'ne')
     hoursAvailable.grid(         :row => 2, :column => numOfColumns + 3, :columnspan => 2, :sticky => 'nw' )
     copyButton.grid(             :row => 4, :column => numOfColumns + 2, :sticky => 'ne' )
 
@@ -379,7 +394,6 @@ class ScrumBook
     addNewButton.grid(           :row => 22, :column => numOfColumns + 2, :sticky => 'nw' )
 
     TkGrid(TkLabel.new(@sprintTab, :text => ""), :row => 10, :column => 0)
-
   end
 
   def createConfigTab(tab)
@@ -424,7 +438,7 @@ class ScrumBook
     }
 
 
-    @exit = Proc.new {
+    @exit_click = Proc.new {
       ret = false
       if @project.saved?
         exit
@@ -463,10 +477,6 @@ class ScrumBook
                   'label'     => "Open...",
                   'command'   => @open_click,
                   'underline' => 0)
-    file_menu.add('command',
-                  'label'     => "Close",
-                  'command'   => @menu_click,
-                  'underline' => 0)
     file_menu.add('separator')
     file_menu.add('command',
                   'label'     => "Save",
@@ -479,7 +489,7 @@ class ScrumBook
     file_menu.add('separator')
     file_menu.add('command',
                   'label'     => "Exit",
-                  'command'   => @exit,
+                  'command'   => @exit_click,
                   'underline' => 3)
 
     menu_bar = TkMenu.new
@@ -519,6 +529,7 @@ class ScrumBook
     file.write serial
     file.close
     true
+    refreshTitle
   end
 
   def loadProject(fileName)
@@ -563,6 +574,14 @@ class ScrumBook
   def refreshView(selected_item = nil?)
     refreshSprint(selected_item)
     refreshTaskEditor
+
+    refreshTitle
+  end
+
+  def refreshTitle
+    new_title = @title
+    new_title += ' *' unless @project.saved?
+    @root.title = new_title
   end
 end
 

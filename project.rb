@@ -75,10 +75,12 @@ class Project
     if !sprint.nil?
       index = sprint
     end
+    @not_saved = true
     @sprintHours[index] = hours
   end
 
   def deleteTask(task)
+    @not_saved = true
     @tasks[@sprint].delete(task) unless @tasks[@sprint].nil?
   end
 
@@ -87,6 +89,7 @@ class Project
     if id1 == 0 || @tasks[@sprint].size-1 <= 1
       return
     end
+    @not_saved = true
     @tasks[@sprint][id1-1], @tasks[@sprint][id1] = @tasks[@sprint][id1], @tasks[@sprint][id1-1]
   end
 
@@ -95,6 +98,7 @@ class Project
     if id1 == @tasks[@sprint].size-1 || @tasks[@sprint].size-1 <= 1
       return
     end
+    @not_saved = true
     @tasks[@sprint][id1], @tasks[@sprint][id1+1] = @tasks[@sprint][id1+1], @tasks[@sprint][id1]
   end
 
@@ -102,31 +106,37 @@ end
 
 
 class Task
-  attr_accessor :committer, :status, :name
+  attr_accessor :committer, :status, :name, :project
   attr_reader :duration
 
-  def initialize( name, committer, status )
+  def initialize( name, committer, status, project = nil )
     @name = name.strip
     @committer = committer.strip
     @status = status.strip
     @duration = Array.new
     @duration.push("")
+    @project = project
   end
 
   def name=(n)
+    @project.not_saved = true unless @project.nil?
     @name = n.strip
   end
 
   def committer=(c)
+    @project.not_saved = true unless @project.nil?
+    logger "update commiter: " + @project.not_saved.to_s
     @committer = c.strip
   end
 
   def status=(s)
+    @project.not_saved = true unless @project.nil?
     @status = s.strip
   end
 
   def addDuration(i, value)
     if Integer(value) && value >= 0
+      @project.not_saved = true unless @project.nil?
       @duration[i] = value
     elsif value.size > 0
       raise ArgumentError, "Duration should be positive integer or zero"
