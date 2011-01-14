@@ -30,14 +30,14 @@ require './helpfunctions.rb'
 
 class ScrumBook
 
-  def initialize
-    # Constants
-    @days = ['Mo', 'Tu', 'We', 'Th', 'Fr']
-    @fileEnding = '.scb'
-    @fileTypes = [['ScrumBook Files', ["*#{@fileEnding}"]],
-                  ['All Files', ['*']]]
-    @title = 'ScrumBook'
+  # Constants
+  DAYS = ['Mo', 'Tu', 'We', 'Th', 'Fr']
+  FILE_ENDING = '.scb'
+  FILE_TYPES = [['ScrumBook Files', ["*#{FILE_ENDING}"]],
+                ['All Files', ['*']]]
+  TITLE = 'ScrumBook'
 
+  def initialize
     fileName = nil
     ARGV.each do|a|
       if File.exists?(a)
@@ -56,7 +56,7 @@ class ScrumBook
     @project = Project.new
 
     @root = TkRoot.new
-    @root.title = @title
+    @root.title = TITLE
 
     createMenu
     createTabs
@@ -293,7 +293,7 @@ class ScrumBook
     logger @sprintTaskTree.inspect
 
     @project.sprintlength.times.each do |d|
-      @sprintTaskTree.heading_configure( "w#{d}", :text => @days[selectDay(d)])
+      @sprintTaskTree.heading_configure( "w#{d}", :text => DAYS[selectDay(d)])
       @sprintTaskTree.column_configure( "w#{d}", :width => 10, :anchor => 'center')
     end
 
@@ -380,7 +380,7 @@ class ScrumBook
     TkGrid(TkLabel.new(@sprintTab, :text => "Status"),    :row => 20, :column => 2)
     taskStatus.grid(                                      :row => 21, :column => 2, :sticky => 'news' )
     @project.sprintlength.times.each do |i|
-      TkGrid(TkLabel.new(@sprintTab, :text => @days[selectDay(i)]),  :row => 20, :column => 3+i)
+      TkGrid(TkLabel.new(@sprintTab, :text => DAYS[selectDay(i)]),  :row => 20, :column => 3+i)
     end
     @project.sprintlength.times.each do |i|
       taskDurationEntry[i].grid(                          :row => 21, :column => 3+i, :sticky => 'news' )
@@ -430,7 +430,7 @@ class ScrumBook
 
 
     @open_click = Proc.new {
-      loadProject(Tk.getOpenFile(:filetypes => @fileTypes))
+      loadProject(Tk.getOpenFile(:filetypes => FILE_TYPES))
     }
 
     @new_click = Proc.new {
@@ -510,9 +510,9 @@ class ScrumBook
   end
 
   def saveAsProject
-    fileName = Tk.getSaveFile(:filetypes => @fileTypes )
+    fileName = Tk.getSaveFile(:filetypes => FILE_TYPES )
     if fileName.size > 0
-      fileName += @fileEnding if fileName.match(@fileEnding).nil?
+      fileName += FILE_ENDING if fileName.match(FILE_ENDING).nil?
 
       @project.fileName=fileName
       logger "SaveAs fileName:" + fileName
@@ -579,7 +579,7 @@ class ScrumBook
   end
 
   def refreshTitle
-    new_title = @title
+    new_title = TITLE
     new_title += ' *' unless @project.saved?
     @root.title = new_title
   end
