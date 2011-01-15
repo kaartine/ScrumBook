@@ -18,31 +18,9 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-require 'yaml'
-require 'tk'
-require 'tkextlib/tile'
-
-require './guimanager'
-require './scrumbcontroller'
-require './project.rb'
-
-#export TCL_LIBRARY=/cygdrive/c/Tcl/lib/tcl8.4
-
-class ScrumBook
-
-  def initialize
-
-    # Initial project (model)
-    @project = Project.new
-
-    @guiManager = GuiManager.new(@project)
-    @controller = ScrumBController.new(@project, @guiManager)
-
-    @guiManager.createGui(@controller)
-
-    @controller.startApp
-  end
-
-end
-
-ScrumBook.new
+# Constants
+DAYS = ['Mo', 'Tu', 'We', 'Th', 'Fr']
+FILE_ENDING = '.scb'
+FILE_TYPES = [['ScrumBook Files', ["*#{FILE_ENDING}"]],
+              ['All Files', ['*']]]
+TITLE = 'ScrumBook'

@@ -25,7 +25,19 @@ class Project
 
   attr_accessor :name, :sprint, :sprintlength, :members, :tasks, :not_saved, :fileName
 
+  attr_reader :sprintHours
+
   def initialize
+    @fileName = ""
+    @sprintlength = 10
+    @not_saved = false
+
+    @tasks = Hash.new
+    @sprint = 0
+    @sprintHours = Hash.new
+  end
+
+  def clear
     @fileName = ""
     @sprintlength = 10
     @not_saved = true
@@ -33,6 +45,16 @@ class Project
     @tasks = Hash.new
     @sprint = 0
     @sprintHours = Hash.new
+  end
+
+  def update(project)
+    @fileName = project.fileName
+    @sprintlength = project.sprintlength
+    @not_saved = project.not_saved
+
+    @tasks = project.tasks
+    @sprint = project.sprint
+    @sprintHours = project.sprintHours
   end
 
   def saved?
