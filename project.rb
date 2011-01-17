@@ -30,7 +30,7 @@ class Project
   def initialize
     @fileName = ""
     @sprintlength = 10
-    @not_saved = false
+    @not_saved = true
 
     @tasks = Hash.new
     @sprint = 0

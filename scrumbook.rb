@@ -18,10 +18,6 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-require 'yaml'
-require 'tk'
-require 'tkextlib/tile'
-
 require './guimanager'
 require './scrumbcontroller'
 require './project.rb'

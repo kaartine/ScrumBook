@@ -18,6 +18,10 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+require 'tk'
+require 'tkextlib/tile'
+
+
 require './configurations'
 require './helpfunctions.rb'
 
@@ -116,6 +120,19 @@ class GuiManager
     end
   end
 
+  def openInformationDialog(title, text)
+    Tk.messageBox(
+      'type'    => "ok",
+      'icon'    => "info",
+      'title'   => title,
+      'message' => text
+    )
+  end
+
+  def startMainLoop
+    Tk.mainloop
+  end
+
   private
 
   def createTabs
@@ -200,7 +217,6 @@ class GuiManager
     @sprintTaskTree.column_configure( 'committer', :width => 70, :anchor => 'center')
     @sprintTaskTree.heading_configure( 'committer', :text => 'Committer')
     @sprintTaskTree.heading_configure( 'status', :text => 'Status')
-    logger @sprintTaskTree.inspect
 
     @project.sprintlength.times.each do |d|
       @sprintTaskTree.heading_configure( "w#{d}", :text => DAYS[selectDay(d)])
@@ -528,5 +544,4 @@ class GuiManager
     @project.clear
     refreshView
   end
-
 end

@@ -18,6 +18,8 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+require 'yaml'
+
 
 class ScrumBController
 
@@ -32,21 +34,19 @@ class ScrumBController
       if File.exists?(a)
         fileName = a
       else
-        Tk.messageBox(
-          'type'    => "ok",
-          'icon'    => "info",
-          'title'   => "Error opening file",
-          'message' => "File \"#{a}\" doesn't exist!"
-        )
+        title = "Error opening file"
+        text = "File \"#{a}\" doesn't exist!"
+        @gui.openInformationDialog(title, text)
       end
     end
 
     loadProject(fileName) unless fileName.nil?
 
-    Tk.mainloop
+    @gui.startMainLoop
   end
 
   def loadProject(fileName)
+    logger "loadProject"
     if !File.exist?(fileName)
       return
     end
@@ -56,17 +56,15 @@ class ScrumBController
     @project.update( YAML.load( serial ) )
     logger @project.inspect
 
-    @gui.project = @project
-
     logger "serial: " + serial.inspect, 4
 
     @project.fileName = fileName
-
     @gui.refreshView
   end
 
   def saveAsProject(fileName)
     if fileName.size > 0
+      # Add file ending if it is not found
       fileName += FILE_ENDING if fileName.match(FILE_ENDING).nil?
 
       @project.fileName=fileName
@@ -83,8 +81,8 @@ class ScrumBController
     logger "serial: " + serial.inspect, 4
     file.write serial
     file.close
-    true
     @gui.refreshTitle
+    true
   end
 
 end
