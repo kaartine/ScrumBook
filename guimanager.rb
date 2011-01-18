@@ -76,20 +76,20 @@ class GuiManager
   def fillTasks(tasks, parent)
     if tasks
       tasks.each do |t|
-        logger "add task id: #{t.id}"
+        logger "add task id: #{t.task_id}"
         root = ''
-        root = parent.id unless parent.nil?
-        temp = @sprintTaskTree.insert(root, 'end', :id => t.id, :text => t.name, :tags => ['clickapple'])
-        @sprintTaskTree.set( t.id, 'committer', t.committer)
-        @sprintTaskTree.set( t.id, 'status', t.status)
-        @sprintTaskTree.itemconfigure(t.id, 'open', true)
+        root = parent.task_id unless parent.nil?
+        temp = @sprintTaskTree.insert(root, 'end', :id => t.task_id, :text => t.name, :tags => ['clickapple'])
+        @sprintTaskTree.set( t.task_id, 'committer', t.committer)
+        @sprintTaskTree.set( t.task_id, 'status', t.status)
+        @sprintTaskTree.itemconfigure(t.task_id, 'open', true)
 
         @project.sprintlength.times.each do |i|
-          @sprintTaskTree.set(t.id, "w#{i}", t.duration[i])
+          @sprintTaskTree.set(t.task_id, "w#{i}", t.duration[i])
         end
 
         @sprintTaskTree.tag_bind('clickapple', 'ButtonRelease-1', @changeTask);
-
+        logger "t.tasks: #{t.tasks.inspect}"
         fillTasks(t.tasks, t)
       end
     end
@@ -98,7 +98,6 @@ class GuiManager
   def refreshTaskEditor
     item = @sprintTaskTree.focus_item()
     logger "selected: " + item.inspect
-
     if !item.nil?
       task = @project.findTask(item.to_i)
 
@@ -253,7 +252,7 @@ class GuiManager
       task = @project.findTask(item.to_i)
 
       updateTask(@sprintTaskTree.focus_item().to_i) if !item.nil?
-      refreshView(task.id)
+      refreshView(task.task_id)
     }
 
     procDeleteTask = Proc.new {

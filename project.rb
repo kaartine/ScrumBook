@@ -43,6 +43,7 @@ class Project
   end
 
   def Project.loadModel(project)
+    logger "Project.loadModel(project) #{project.inspect}"
     @@project = project
     @@project
   end
@@ -64,6 +65,8 @@ class Project
     @tasks = Hash.new
     @sprint = 0
     @sprintHours = Hash.new
+    @task_id = 1
+    @@project = nil
   end
 
   def update(project)
@@ -108,7 +111,7 @@ class Project
       @tasks[@sprint][id].addSubTask(newTask)
       parentFound = true
     else
-      logger "parent is in lowet levels"
+      logger "parent is in lower levels"
       @tasks[@sprint].each do |t|
         if t.findAndPush(parentTask_id, newTask)
           parentFound = true
@@ -122,7 +125,7 @@ class Project
       exit
     end
 
-    newTask.id = @task_id
+    newTask.task_id = @task_id
     @task_id += 1
     @not_saved = true
   end
@@ -148,15 +151,17 @@ class Project
   end
 
   def deleteTask(task_id)
+    logger "deleteTask id: #{task_id}"
     return if @tasks[@sprint].nil?
     @not_saved = true
 
     task = findTask(task_id)
-    logger "delete this #{task.id}"
     if !task.nil? && !task.parent.nil?
       t = task.parent
+      logger "ret"
       return t.tasks.delete(task_id)
     elsif !task.nil?
+      logger "return"
       return @tasks[@sprint].delete(task_id)
     end
     nil
@@ -200,7 +205,7 @@ class Project
     found = nil
     @tasks[@sprint].each do |t|
       found = t.find(task_id)
-      break if found
+      break if !found.nil?
     end
     found
   end
@@ -208,7 +213,7 @@ end
 
 
 class Task
-  attr_accessor :committer, :status, :name, :project, :id, :parent
+  attr_accessor :committer, :status, :name, :project, :task_id, :parent
   attr_reader :duration, :tasks
 
   def initialize( name, committer, status, project = nil )
@@ -219,7 +224,7 @@ class Task
     @duration.push("")
     @project = project
     @tasks = Array.new
-    @id = -1
+    @task_id = -1
     @parent = nil
   end
 
@@ -249,7 +254,7 @@ class Task
   end
 
   def addSubTask(newTask)
-    raise ArgumentError, "Parent task same as new task!" if newTask === self
+    raise ArgumentError, "Parent task is same as new task!" if newTask === self
 
     @project.not_saved = true unless @project.nil?
     newTask.parent = self
@@ -257,28 +262,29 @@ class Task
   end
 
   def ==(id)
-    self.id == id
+    self.task_id == id
   end
 
   def find(task_id)
-    logger "find: #{task_id} current #{@id}"
+    logger "find: #{task_id} current #{@task_id}"
     found = nil
-    if @id == task_id
+    if @task_id == task_id
       logger "found"
       return self
     else
-      found = nil
+      logger @tasks.inspect
       @tasks.each do |t|
         found = t.find(task_id)
         break if found
       end
     end
+    logger "found: #{found}"
     found
   end
 
   def findAndPush(parentTask_id, newTask)
     found = nil
-    if @id == parentTask_id
+    if @task_id == parentTask_id
       return addSubTask(newTask)
     else
       found = false
@@ -289,5 +295,4 @@ class Task
     end
     found
   end
-
 end

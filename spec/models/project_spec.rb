@@ -28,8 +28,8 @@ describe Project do
     project.getActiveSprintsTasks.size.should == 2
 
     tasks = project.getActiveSprintsTasks
-    tasks[0].id.should == 1
-    tasks[1].id.should == 2
+    tasks[0].task_id.should == 1
+    tasks[1].task_id.should == 2
 
     # there should not be any tasks in sprint 1
     project.sprint = 1
@@ -39,7 +39,7 @@ describe Project do
     project.getActiveSprintsTasks.size.should == 1
 
     tasks = project.getActiveSprintsTasks
-    tasks[0].id.should == 3
+    tasks[0].task_id.should == 3
   end
 
   it "should return tasks for active sprint" do
@@ -91,14 +91,15 @@ describe Project do
     project.addNewTaskToSprint(second)
     project.addNewTaskToSprint(third)
     project.getActiveSprintsTasks.size.should == 3
-    project.deleteTask(second.id).should == second
-    project.deleteTask(second.id).should == nil
+    project.findTask(2).should === second
+    project.deleteTask(second.task_id).should === second
+    project.deleteTask(second.task_id).should == nil
     project.deleteTask(100).should == nil
     project.getActiveSprintsTasks.size.should == 2
     project.sprint = 1
-    project.deleteTask(first.id).should == nil
+    project.deleteTask(first.task_id).should == nil
     project.sprint = 0
-    project.deleteTask(first.id).should == first
+    project.deleteTask(first.task_id).should === first
   end
 
   it "should be possible to add sub task" do
@@ -112,14 +113,14 @@ describe Project do
     first2 = Task.new("find me", "C", "open")
     first3 = Task.new("first", "C", "open")
     second2 = Task.new("second", "C", "closed")
-    project.addNewTaskToSprint(first2,first.id)
-    project.addNewTaskToSprint(first3,first.id)
-    project.addNewTaskToSprint(second2,second.id)
+    project.addNewTaskToSprint(first2,first.task_id)
+    project.addNewTaskToSprint(first3,first.task_id)
+    project.addNewTaskToSprint(second2,second.task_id)
     first3 = Task.new("find also me", "C", "open")
-    project.addNewTaskToSprint(first3,second.id)
+    project.addNewTaskToSprint(first3,second.task_id)
 
     # should not be possible to add self to it self
-    lambda{ project.addNewTaskToSprint(first2,first2.id) }.should raise_error
+    lambda{ project.addNewTaskToSprint(first2,first2.task_id) }.should raise_error
 
     project.getActiveSprintsTasks.size.should == 3
 
@@ -174,9 +175,9 @@ describe Project do
     first2 = Task.new("find me", "C", "open")
     first3 = Task.new("first", "C", "open")
     second2 = Task.new("second", "C", "closed")
-    project.addNewTaskToSprint(first2,first.id)
-    project.addNewTaskToSprint(first3,first.id)
-    project.addNewTaskToSprint(second2,second.id)
+    project.addNewTaskToSprint(first2,first.task_id)
+    project.addNewTaskToSprint(first3,first.task_id)
+    project.addNewTaskToSprint(second2,second.task_id)
 
     project.findTask(1).tasks[0].name.should == "find me"
     project.moveTaskUp(5)
@@ -194,9 +195,9 @@ describe Project do
     first2 = Task.new("find me", "C", "open")
     first3 = Task.new("first", "C", "open")
     second2 = Task.new("second", "C", "closed")
-    project.addNewTaskToSprint(first2,first.id)
-    project.addNewTaskToSprint(first3,first.id)
-    project.addNewTaskToSprint(second2,second.id)
+    project.addNewTaskToSprint(first2,first.task_id)
+    project.addNewTaskToSprint(first3,first.task_id)
+    project.addNewTaskToSprint(second2,second.task_id)
 
     project.findTask(1).tasks[0].name.should == "find me"
     project.moveTaskDown(4)
@@ -214,9 +215,9 @@ describe Project do
     first2 = Task.new("find me", "C", "open")
     first3 = Task.new("first", "C", "open")
     second2 = Task.new("second", "C", "closed")
-    project.addNewTaskToSprint(first2,first.id)
-    project.addNewTaskToSprint(first3,first.id)
-    project.addNewTaskToSprint(second2,second.id)
+    project.addNewTaskToSprint(first2,first.task_id)
+    project.addNewTaskToSprint(first3,first.task_id)
+    project.addNewTaskToSprint(second2,second.task_id)
 
     project.deleteTask(5).should === first3
 
