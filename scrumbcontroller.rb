@@ -23,6 +23,8 @@ require 'yaml'
 
 class ScrumBController
 
+  attr_accessor :project
+
   def initialize(project, gui)
     @project = project
     @gui = gui
@@ -53,8 +55,9 @@ class ScrumBController
     file = File.new fileName, 'r'
     serial = file.read
     file.close
-    @project.update( YAML.load( serial ) )
-    logger @project.inspect
+    @project = Project.loadModel( YAML.load( serial ) )
+    logger @project.inspect, 4
+    @gui.project = @project
 
     logger "serial: " + serial.inspect, 4
 
@@ -63,6 +66,7 @@ class ScrumBController
   end
 
   def saveAsProject(fileName)
+    logger "saveAsProject: " + fileName
     if fileName.size > 0
       # Add file ending if it is not found
       fileName += FILE_ENDING if fileName.match(FILE_ENDING).nil?
@@ -74,6 +78,7 @@ class ScrumBController
   end
 
   def saveProject
+    logger "save project"
     file = File.new @project.fileName, 'w'
     @project.not_saved = false
     logger @project.inspect

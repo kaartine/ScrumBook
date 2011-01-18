@@ -25,7 +25,11 @@ class Project
 
   attr_accessor :name, :sprint, :sprintlength, :members, :tasks, :not_saved, :fileName
 
-  attr_reader :sprintHours
+  attr_reader :sprintHours, :task_id
+
+  private_class_method :new
+
+  @@project = nil
 
   def initialize
     @fileName = ""
@@ -35,6 +39,21 @@ class Project
     @tasks = Hash.new
     @sprint = 0
     @sprintHours = Hash.new
+    @task_id = 1
+  end
+
+  def Project.loadModel(project)
+    @@project = project
+    @@project
+  end
+
+  def Project.create
+    @@project = new unless @@project
+    @@project
+  end
+
+  def Project.delete
+    @@project = nil
   end
 
   def clear
@@ -55,6 +74,7 @@ class Project
     @tasks = project.tasks
     @sprint = project.sprint
     @sprintHours = project.sprintHours
+    @task_id = project.task_id
   end
 
   def saved?
@@ -65,20 +85,46 @@ class Project
     @tasks[@sprint]
   end
 
-  def addNewTaskToSprint(newTask)
+  def addNewTaskToSprint(newTask, parentTask_id=nil)
     if newTask.name.size == 0
       raise ArgumentError, "Name is not set"
     end
+
+    if parentTask_id
+      Integer(parentTask_id)
+    end
+
 
     logger "before: " + @tasks.inspect, 4
     if !@tasks.has_key?(@sprint)
       @tasks[@sprint] = Array.new
     end
 
-    if @tasks[@sprint].index(newTask.name).nil?
+    if parentTask_id.nil?
+      logger "no parent", 4
       @tasks[@sprint].push(newTask)
-      @not_saved = true
+    elsif id = @tasks[@sprint].index(parentTask_id)
+      logger "parent in first level"
+      @tasks[@sprint][id].addSubTask(newTask)
+      parentFound = true
+    else
+      logger "parent is in lowet levels"
+      @tasks[@sprint].each do |t|
+        if t.findAndPush(parentTask_id, newTask)
+          parentFound = true
+          break
+        end
+      end
     end
+
+    if parentTask_id && parentFound == false
+      logger "BUG: parent was not found: " + parentTask_id
+      exit
+    end
+
+    newTask.id = @task_id
+    @task_id += 1
+    @not_saved = true
   end
 
   def getSprintHours(sprint=nil)
@@ -101,35 +147,69 @@ class Project
     @sprintHours[index] = hours
   end
 
-  def deleteTask(task)
+  def deleteTask(task_id)
+    return if @tasks[@sprint].nil?
     @not_saved = true
-    @tasks[@sprint].delete(task) unless @tasks[@sprint].nil?
+
+    task = findTask(task_id)
+    logger task.inspect
+    if !task.nil?
+      return @tasks[@sprint].delete(task_id)
+    elsif !task.nil? && !task.parent.nil?
+      t = task.parent
+      return t.delete(task_id)
+    end
+    nil
   end
 
-  def moveTaskUp(name)
-    id1 = @tasks[@sprint].index(name)
-    if id1 == 0 || @tasks[@sprint].size-1 <= 1
+  def moveTaskUp(task_id)
+    task = findTask(task_id)
+    tasks = nil?
+    if task.parent.nil?
+      tasks = @tasks[@sprint]
+    else
+      tasks = task.parent.tasks
+    end
+
+    id1 = tasks.index(task_id)
+    if id1 == 0 || tasks.size <= 1
       return
     end
     @not_saved = true
-    @tasks[@sprint][id1-1], @tasks[@sprint][id1] = @tasks[@sprint][id1], @tasks[@sprint][id1-1]
+    tasks[id1-1], tasks[id1] = tasks[id1], tasks[id1-1]
   end
 
-  def moveTaskDown(name)
-    id1 = @tasks[@sprint].index(name)
-    if id1 == @tasks[@sprint].size-1 || @tasks[@sprint].size-1 <= 1
+  def moveTaskDown(task_id)
+    task = findTask(task_id)
+    tasks = nil?
+    if task.parent.nil?
+      tasks = @tasks[@sprint]
+    else
+      tasks = task.parent.tasks
+    end
+
+    id1 = tasks.index(task_id)
+    if id1 == tasks.size-1 || tasks.size <= 1
       return
     end
     @not_saved = true
-    @tasks[@sprint][id1], @tasks[@sprint][id1+1] = @tasks[@sprint][id1+1], @tasks[@sprint][id1]
+    tasks[id1], tasks[id1+1] = tasks[id1+1], tasks[id1]
   end
 
+  def findTask(task_id)
+    found = nil
+    @tasks[@sprint].each do |t|
+      found = t.find(task_id)
+      break if found
+    end
+    found
+  end
 end
 
 
 class Task
-  attr_accessor :committer, :status, :name, :project
-  attr_reader :duration
+  attr_accessor :committer, :status, :name, :project, :id, :parent
+  attr_reader :duration, :tasks
 
   def initialize( name, committer, status, project = nil )
     @name = name.strip
@@ -138,6 +218,9 @@ class Task
     @duration = Array.new
     @duration.push("")
     @project = project
+    @tasks = Array.new
+    @id = -1
+    @parent = nil
   end
 
   def name=(n)
@@ -165,8 +248,46 @@ class Task
     end
   end
 
+  def addSubTask(newTask)
+    raise ArgumentError, "Parent task same as new task!" if newTask === self
+
+    @project.not_saved = true unless @project.nil?
+    newTask.parent = self
+    @tasks.push(newTask)
+  end
+
   def ==(id)
-    self.name == id
+    self.id == id
+  end
+
+  def find(task_id)
+    logger "find: #{task_id} current #{@id}"
+    found = nil
+    if @id == task_id
+      logger "found"
+      return self
+    else
+      found = nil
+      @tasks.each do |t|
+        found = t.find(task_id)
+        break if found
+      end
+    end
+    found
+  end
+
+  def findAndPush(parentTask_id, newTask)
+    found = nil
+    if @id == parentTask_id
+      return addSubTask(newTask)
+    else
+      found = false
+      @tasks.each do |t|
+        found = t.findAndPush(parentTask_id, newTask)
+        break if found
+      end
+    end
+    found
   end
 
 end

@@ -30,7 +30,6 @@ class GuiManager
   attr_accessor :project
 
   def initialize(project)
-
     @project = project
   end
 
@@ -67,29 +66,32 @@ class GuiManager
     items = @sprintTaskTree.children('')
     @sprintTaskTree.delete(items)
 
-    use_as_selected = selected_item
-    temp = nil?
-    if @project.tasks[id]
-      @project.tasks[id].each do |t|
-        temp = @sprintTaskTree.insert('', 'end', :id => t.name, :text => t.name, :tags => ['clickapple'])
-        @sprintTaskTree.set( t.name, 'committer', t.committer)
-        @sprintTaskTree.set( t.name, 'status', t.status)
+    fillTasks(@project.tasks[id], nil)
+
+    @sprintTaskTree.focus_item(selected_item) unless selected_item.nil?
+
+    logger "project: " + @project.inspect, 4
+  end
+
+  def fillTasks(tasks, parent)
+    if tasks
+      tasks.each do |t|
+        logger "add task id: #{t.id}"
+        root = ''
+        root = parent.id unless parent.nil?
+        temp = @sprintTaskTree.insert(root, 'end', :id => t.id, :text => t.name, :tags => ['clickapple'])
+        @sprintTaskTree.set( t.id, 'committer', t.committer)
+        @sprintTaskTree.set( t.id, 'status', t.status)
+        @sprintTaskTree.itemconfigure(t.id, 'open', true)
 
         @project.sprintlength.times.each do |i|
-          @sprintTaskTree.set(t.name, "w#{i}", t.duration[i])
+          @sprintTaskTree.set(t.id, "w#{i}", t.duration[i])
         end
 
         @sprintTaskTree.tag_bind('clickapple', 'ButtonRelease-1', @changeTask);
 
-        if( selected_item == t.name )
-          use_as_selected = temp
-          logger "found new selection: " + temp.inspect
-        end
+        fillTasks(t.tasks, t)
       end
-
-      @sprintTaskTree.focus_item(use_as_selected)
-
-      logger "project: " + @project.inspect
     end
   end
 
@@ -98,17 +100,15 @@ class GuiManager
     logger "selected: " + item.inspect
 
     if !item.nil?
-      tasks = @project.getActiveSprintsTasks()
-      id = tasks.index(item.id.to_s)
+      task = @project.findTask(item.to_i)
 
-      logger "task id: " + id.to_s
-      logger tasks[id].inspect
+      logger task.inspect
 
-      @taskName.value = tasks[id].name
-      @taskCommitter.value = tasks[id].committer
-      @taskStatus.value = tasks[id].status
+      @taskName.value = task.name
+      @taskCommitter.value = task.committer
+      @taskStatus.value = task.status
       @project.sprintlength.times.each  do |i|
-        @taskDuration[i].value = tasks[id].duration[i]
+        @taskDuration[i].value = task.duration[i]
       end
     else
       @taskName.value = ""
@@ -153,20 +153,17 @@ class GuiManager
     tab.pack("expand" => "1", "fill" => "both")
   end
 
-  def updateTask(item_name)
-    logger "updateTask: " + item_name
-    tasks = @project.getActiveSprintsTasks()
-    id = tasks.index(item_name)
-    logger "task id: " + id.to_s
+  def updateTask(item_id)
+    logger "updateTask: " + item_id.to_s
+    task = @project.findTask(item_id)
 
-    if !id.nil?
-      tasks[id].project = @project
-      tasks[id].name = @taskName.value
-      tasks[id].committer = @taskCommitter.value
-      tasks[id].status = @taskStatus.value
+    if !task.nil?
+      task.name = @taskName.value
+      task.committer = @taskCommitter.value
+      task.status = @taskStatus.value
       @project.sprintlength.times.each  do |i|
-        tasks[id].addDuration(i, @taskDuration[i].value.to_i)
-        logger "task update w#{i}: " + tasks[id].duration[i].to_s
+        task.addDuration(i, @taskDuration[i].value.to_i)
+        logger "task update w#{i}: " + task.duration[i].to_s
       end
     end
   end
@@ -253,46 +250,51 @@ class GuiManager
       item = @sprintTaskTree.focus_item()
       logger "procUpdateTask: " + item.inspect
 
-      tasks = @project.getActiveSprintsTasks()
-      index = tasks.index(item.id)
-      if tasks[index].name == @taskName.value || tasks.index(@taskName.value).nil?
-        updateTask(@sprintTaskTree.focus_item().id) if !item.nil?
-        refreshView(tasks[index].name)
-      else
-        Tk.messageBox(
-            'type'    => "ok",
-            'icon'    => "info",
-            'title'   => "Title",
-            'message' => "Task \"#{@taskName.value}\" already exists!"
-          )
-      end
+      task = @project.findTask(item.to_i)
+
+      updateTask(@sprintTaskTree.focus_item().to_i) if !item.nil?
+      refreshView(task.id)
     }
 
     procDeleteTask = Proc.new {
       item = @sprintTaskTree.focus_item()
       logger "procUpdateTask: " + item.inspect
       if !item.nil?
-        @project.deleteTask(item.id)
+        @project.deleteTask(item.to_i)
       end
       refreshView
     }
 
 
     procAddNewTask = Proc.new {
+      logger "procAddNewTask: " + @taskName.inspect
       task = Task.new(@taskName.value, @taskCommitter.value, @taskStatus.value, @project)
       @project.sprintlength.times.each  do |i|
         task.addDuration(i, @taskDuration[i].value.to_i)
         logger "task update w#{i}: " + task.duration[i].to_s
       end
       begin
-        if @project.addNewTaskToSprint(task).nil?
-          Tk.messageBox(
+        @project.addNewTaskToSprint(task)
+      rescue ArgumentError
+        Tk.messageBox(
             'type'    => "ok",
             'icon'    => "info",
             'title'   => "Title",
-            'message' => "Task #{@taskName.value} already exists!"
+            'message' => "You have to give name to your task!"
           )
-        end
+      end
+      refreshView
+    }
+
+    procAddNewSubTask = Proc.new {
+      task = Task.new(@taskName.value, @taskCommitter.value, @taskStatus.value, @project)
+      @project.sprintlength.times.each  do |i|
+        task.addDuration(i, @taskDuration[i].value.to_i)
+        logger "task update w#{i}: " + task.duration[i].to_s
+      end
+      begin
+        parent_id = @sprintTaskTree.focus_item().to_i
+        @project.addNewTaskToSprint(task, parent_id)
       rescue ArgumentError
         Tk.messageBox(
             'type'    => "ok",
@@ -308,7 +310,7 @@ class GuiManager
       item = @sprintTaskTree.focus_item()
       logger "procMoveTaskUp: " + item.inspect
       if !item.nil?
-        @project.moveTaskUp(item.id)
+        @project.moveTaskUp(item.to_i)
       end
       refreshView(item)
     }
@@ -317,7 +319,7 @@ class GuiManager
       item = @sprintTaskTree.focus_item()
       logger "procMoveTaskDown: " + item.inspect
       if !item.nil?
-        @project.moveTaskDown(item.id)
+        @project.moveTaskDown(item.to_i)
       end
       refreshView(item)
     }
@@ -328,9 +330,6 @@ class GuiManager
       text 'Copy open tasks'
       command( procUpdateTask )
     }
-    emptyLabel = TkLabel.new(@sprintTab)
-    emptyLabel2 = TkLabel.new(@sprintTab)
-
 
     # Task update button
     updateButton = TkButton.new(@sprintTab) {
@@ -352,11 +351,18 @@ class GuiManager
      }
 
     # Add new task button
-    addNewButton = TkButton.new(@sprintTab) {
+    addNewTaskButton = TkButton.new(@sprintTab) {
       text 'Add new Task'
       underline 8
       command( procAddNewTask )
      }
+
+   addNewSubTaskButton = TkButton.new(@sprintTab) {
+      text 'Add Sub Task'
+      underline 6
+      command( procAddNewSubTask )
+     }
+
 
     # Delete selected task button
     deleteButton = TkButton.new(@sprintTab) {
@@ -392,12 +398,14 @@ class GuiManager
     moveDownButton.grid(         :row => 22, :column => numOfColumns + 4, :sticky => 'nw' )
     TkGrid(TkLabel.new(@sprintTab, :text => " "), :row => 23, :column => numOfColumns + 1)
     deleteButton.grid(           :row => 24, :column => numOfColumns + 4, :sticky => 'nw' )
-    addNewButton.grid(           :row => 22, :column => numOfColumns + 2, :sticky => 'nw' )
+    addNewTaskButton.grid(       :row => 22, :column => numOfColumns + 2, :sticky => 'nw' )
+    addNewSubTaskButton.grid(    :row => 23, :column => numOfColumns + 2, :sticky => 'nw' )
 
     TkGrid(TkLabel.new(@sprintTab, :text => ""), :row => 10, :column => 0)
 
     @root.bind( "Control-u", procUpdateTask )
     @root.bind( "Control-t", procAddNewTask )
+    @root.bind( "Control-b", procAddNewSubTask )
     @root.bind( "Control-d", procDeleteTask )
 
   end
@@ -502,14 +510,13 @@ class GuiManager
                 'label' => "File")
 
       # Keyboard shortcuts
-    @root.bind( "Control-s", save_click )
     @root.bind( "Control-o", open_click )
+    @root.bind( "Control-s", save_click )
     @root.bind( "Control-a", saveAs_click )
     @root.bind( "Control-n", new_click )
     @root.bind( "Control-x", exit_click )
 
     @root.menu(menu_bar)
-
   end
 
   def saveClick
@@ -522,7 +529,7 @@ class GuiManager
 
   def saveAsProject
     fileName = Tk.getSaveFile(:filetypes => FILE_TYPES )
-    @controller.saveProject
+    @controller.saveAsProject(fileName)
   end
 
   def newProject
@@ -531,7 +538,7 @@ class GuiManager
         'type'    => "yesnocancel",
         'icon'    => "question",
         'title'   => "Title",
-        'message' => "Creating new project but project is not saved! Save project or not. You can also calcel project creation.",
+        'message' => "Creating new project but project is not saved! Save project or not. You can also cancel project creation.",
         'default' => "yes"
         )
       if answer == "yes"
