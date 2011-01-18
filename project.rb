@@ -152,12 +152,12 @@ class Project
     @not_saved = true
 
     task = findTask(task_id)
-    logger task.inspect
-    if !task.nil?
-      return @tasks[@sprint].delete(task_id)
-    elsif !task.nil? && !task.parent.nil?
+    logger "delete this #{task.id}"
+    if !task.nil? && !task.parent.nil?
       t = task.parent
-      return t.delete(task_id)
+      return t.tasks.delete(task_id)
+    elsif !task.nil?
+      return @tasks[@sprint].delete(task_id)
     end
     nil
   end

@@ -218,13 +218,15 @@ describe Project do
     project.addNewTaskToSprint(first3,first.id)
     project.addNewTaskToSprint(second2,second.id)
 
+    project.deleteTask(5).should === first3
 
-    puts project.inspect + "\n"
-    project.deleteTask(5)
-    puts project.inspect + "\n"
+    project.findTask(5).should == nil
+    project.findTask(4).should === first2
 
-     project.findTask(5).should == nil
-
+    project.findTask(6).should == second2
+    project.deleteTask(2).should === second
+    project.findTask(2).should == nil
+    project.findTask(6).should == nil
   end
 
 end
