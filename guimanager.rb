@@ -68,6 +68,7 @@ class GuiManager
 
     fillTasks(@project.tasks[id], nil)
 
+    logger "selected_item: #{selected_item}"
     @sprintTaskTree.focus_item(selected_item) unless selected_item.nil?
 
     logger "project: " + @project.inspect, 4
@@ -76,7 +77,7 @@ class GuiManager
   def fillTasks(tasks, parent)
     if tasks
       tasks.each do |t|
-        logger "add task id: #{t.task_id}"
+        logger "add task id: #{t.task_id}", 4
         root = ''
         root = parent.task_id unless parent.nil?
         temp = @sprintTaskTree.insert(root, 'end', :id => t.task_id, :text => t.name, :tags => ['clickapple'])
@@ -88,8 +89,8 @@ class GuiManager
           @sprintTaskTree.set(t.task_id, "w#{i}", t.duration[i])
         end
 
-        @sprintTaskTree.tag_bind('clickapple', 'ButtonRelease-1', @changeTask);
-        logger "t.tasks: #{t.tasks.inspect}"
+        @sprintTaskTree.tag_bind('clickapple', 'ButtonRelease-1', @changeTask)
+        logger "t.tasks: #{t.tasks.inspect}", 4
         fillTasks(t.tasks, t)
       end
     end
@@ -101,7 +102,7 @@ class GuiManager
     if !item.nil?
       task = @project.findTask(item.to_i)
 
-      logger task.inspect
+      logger task.inspect, 4
 
       @taskName.value = task.name
       @taskCommitter.value = task.committer
@@ -402,11 +403,14 @@ class GuiManager
 
     TkGrid(TkLabel.new(@sprintTab, :text => ""), :row => 10, :column => 0)
 
+    # Keyboard binnigs
     @root.bind( "Control-u", procUpdateTask )
     @root.bind( "Control-t", procAddNewTask )
     @root.bind( "Control-b", procAddNewSubTask )
     @root.bind( "Control-d", procDeleteTask )
 
+    @sprintTaskTree.bind("KeyRelease-Up", @changeTask)
+    @sprintTaskTree.bind("KeyRelease-Down", @changeTask)
   end
 
   def createConfigTab(tab)
@@ -463,7 +467,7 @@ class GuiManager
           )
         if yes == "yes"
           if @project.fileName.size > 0
-            ret = saveProject
+            ret = @controller.saveProject
            else
              ret = saveAsProject
            end
@@ -514,6 +518,7 @@ class GuiManager
     @root.bind( "Control-a", saveAs_click )
     @root.bind( "Control-n", new_click )
     @root.bind( "Control-x", exit_click )
+    @root.protocol("WM_DELETE_WINDOW", exit_click)
 
     @root.menu(menu_bar)
   end
