@@ -48,7 +48,7 @@ class ScrumBController
   end
 
   def loadProject(fileName)
-    logger "loadProject"
+    logger "loadProject", 4
     if !File.exist?(fileName)
       return
     end
@@ -57,7 +57,6 @@ class ScrumBController
     serial = file.read
     file.close
     @project = Project.loadModel( YAML.load( serial ) )
-    logger @project.inspect, 3
     @gui.project = @project
 
     logger "serial: " + serial.inspect, 4
@@ -81,8 +80,8 @@ class ScrumBController
   def saveProject
     logger "save project"
     file = File.new @project.fileName, 'w'
-    @project.not_saved = false
     logger @project.inspect
+    @project.set_to_saved
     serial = YAML.dump( @project )
     logger "serial: " + serial.inspect, 3
     file.write serial

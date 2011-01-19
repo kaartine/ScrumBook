@@ -23,9 +23,9 @@ require './helpfunctions.rb'
 
 class Project
 
-  attr_accessor :name, :sprint, :sprintlength, :members, :tasks, :not_saved, :fileName
+  attr_accessor :name, :sprint, :sprintlength, :members, :tasks, :fileName
 
-  attr_reader :sprintHours, :task_id
+  attr_reader :sprintHours, :task_id, :not_saved
 
   private_class_method :new
 
@@ -43,7 +43,7 @@ class Project
   end
 
   def Project.loadModel(project)
-    logger "Project.loadModel(project) #{project.inspect}"
+    logger "Project.loadModel(project) #{project.inspect}", 4
     @@project = project
     @@project
   end
@@ -84,6 +84,14 @@ class Project
     !@not_saved
   end
 
+  def set_to_saved
+    @not_saved = false
+  end
+
+  def modified
+    @not_saved = true
+  end
+
   def getActiveSprintsTasks
     @tasks[@sprint]
   end
@@ -97,21 +105,22 @@ class Project
       Integer(parentTask_id)
     end
 
-
     logger "before: " + @tasks.inspect, 4
     if !@tasks.has_key?(@sprint)
       @tasks[@sprint] = Array.new
     end
 
+    newTask.project = self
+
     if parentTask_id.nil?
       logger "no parent", 4
       @tasks[@sprint].push(newTask)
     elsif id = @tasks[@sprint].index(parentTask_id)
-      logger "parent in first level"
+      logger "parent in first level", 4
       @tasks[@sprint][id].addSubTask(newTask)
       parentFound = true
     else
-      logger "parent is in lower levels"
+      logger "parent is in lower levels", 4
       @tasks[@sprint].each do |t|
         if t.findAndPush(parentTask_id, newTask)
           parentFound = true
@@ -151,17 +160,15 @@ class Project
   end
 
   def deleteTask(task_id)
-    logger "deleteTask id: #{task_id}"
+    logger "deleteTask id: #{task_id}", 4
     return if @tasks[@sprint].nil?
     @not_saved = true
 
     task = findTask(task_id)
     if !task.nil? && !task.parent.nil?
       t = task.parent
-      logger "ret"
       return t.tasks.delete(task_id)
     elsif !task.nil?
-      logger "return"
       return @tasks[@sprint].delete(task_id)
     end
     nil
@@ -209,44 +216,44 @@ class Project
     end
     found
   end
+
 end
 
 
 class Task
-  attr_accessor :committer, :status, :name, :project, :task_id, :parent
+  attr_accessor :committer, :status, :name, :project, :task_id
   attr_reader :duration, :tasks
 
-  def initialize( name, committer, status, project = nil )
+  def initialize( name, committer, status )
     @name = name.strip
     @committer = committer.strip
     @status = status.strip
     @duration = Array.new
     @duration.push("")
-    @project = project
+    @project = nil
     @tasks = Array.new
     @task_id = -1
     @parent = nil
   end
 
   def name=(n)
-    @project.not_saved = true unless @project.nil?
+    @project.modified unless @project.nil?
     @name = n.strip
   end
 
   def committer=(c)
-    @project.not_saved = true unless @project.nil?
-    logger "update commiter: " + @project.not_saved.to_s
+    @project.modified unless @project.nil?
     @committer = c.strip
   end
 
   def status=(s)
-    @project.not_saved = true unless @project.nil?
+    @project.modified unless @project.nil?
     @status = s.strip
   end
 
   def addDuration(i, value)
     if Integer(value) && value >= 0
-      @project.not_saved = true unless @project.nil?
+      @project.modified unless @project.nil?
       @duration[i] = value
     elsif value.size > 0
       raise ArgumentError, "Duration should be positive integer or zero"
@@ -254,10 +261,10 @@ class Task
   end
 
   def addSubTask(newTask)
-    raise ArgumentError, "Parent task is same as new task!" if newTask === self
+    raise ArgumentError, "Parent task is same as new task!" if newTask.task_id == self.task_id
 
-    @project.not_saved = true unless @project.nil?
-    newTask.parent = self
+    @project.modified unless @project.nil?
+    newTask.parent = self.task_id
     @tasks.push(newTask)
   end
 
@@ -266,19 +273,19 @@ class Task
   end
 
   def find(task_id)
-    logger "find: #{task_id} current #{@task_id}"
+    logger "find: #{task_id} current #{@task_id}", 4
     found = nil
     if @task_id == task_id
-      logger "found"
+      logger "found", 4
       return self
     else
-      logger @tasks.inspect
+      logger @tasks.inspect, 4
       @tasks.each do |t|
         found = t.find(task_id)
         break if found
       end
     end
-    logger "found: #{found}"
+    logger "found: #{found}", 4
     found
   end
 
@@ -294,5 +301,13 @@ class Task
       end
     end
     found
+  end
+
+  def parent=(id)
+    @parent = id
+  end
+
+  def parent
+    @project.findTask(@parent) unless @project.nil?
   end
 end

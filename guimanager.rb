@@ -267,7 +267,7 @@ class GuiManager
 
     procAddNewTask = Proc.new {
       logger "procAddNewTask: " + @taskName.inspect
-      task = Task.new(@taskName.value, @taskCommitter.value, @taskStatus.value, @project)
+      task = Task.new(@taskName.value, @taskCommitter.value, @taskStatus.value)
       @project.sprintlength.times.each  do |i|
         task.addDuration(i, @taskDuration[i].value.to_i)
         logger "task update w#{i}: " + task.duration[i].to_s
@@ -286,7 +286,7 @@ class GuiManager
     }
 
     procAddNewSubTask = Proc.new {
-      task = Task.new(@taskName.value, @taskCommitter.value, @taskStatus.value, @project)
+      task = Task.new(@taskName.value, @taskCommitter.value, @taskStatus.value)
       @project.sprintlength.times.each  do |i|
         task.addDuration(i, @taskDuration[i].value.to_i)
         logger "task update w#{i}: " + task.duration[i].to_s
