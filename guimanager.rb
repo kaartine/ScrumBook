@@ -31,6 +31,8 @@ class GuiManager
 
   def initialize(project)
     @project = project
+    @effortsRemainingLabel = Array.new
+    @effortsRemaining = Array.new
   end
 
   def createGui( controller )
@@ -57,7 +59,7 @@ class GuiManager
   end
 
   def refreshSprint(selected_item = nil)
-    @projectSprint.value = @project.sprint
+    @project.sprint = @projectSprint.value
 
     id = @projectSprint.value.to_i
     logger "sprint_id: " + id.to_s
@@ -66,7 +68,13 @@ class GuiManager
     items = @sprintTaskTree.children('')
     @sprintTaskTree.delete(items)
 
+    @effortsRemaining.clear
+
     fillTasks(@project.tasks[id], nil)
+
+    @project.sprintlength.times.each do |i|
+      @effortsRemainingLabel[i].text = @effortsRemaining[i]
+    end
 
     logger "selected_item: #{selected_item}"
     @sprintTaskTree.focus_item(selected_item) unless selected_item.nil?
@@ -87,6 +95,8 @@ class GuiManager
 
         @project.sprintlength.times.each do |i|
           @sprintTaskTree.set(t.task_id, "w#{i}", t.duration[i])
+          @effortsRemaining.push(0) if @effortsRemaining[i].nil?
+          @effortsRemaining[i] += t.duration[i]
         end
 
         @sprintTaskTree.tag_bind('clickapple', 'ButtonRelease-1', @changeTask)
@@ -174,7 +184,7 @@ class GuiManager
     TkGrid.rowconfigure( @sprintTab, 0, :weight => 1 )
 
     @changeSprint = Proc.new {
-      refreshSprint
+      refreshView
     }
 
     @changeTask = Proc.new {
@@ -187,12 +197,13 @@ class GuiManager
       from 0
       increment 1
       width 10
-      command {$s.refreshView}
     }
     sprintEntry.bind("ButtonRelease-1", @changeSprint)
+    sprintEntry.bind("KeyRelease-Up", @changeSprint)
+    sprintEntry.bind("KeyRelease-Down", @changeSprint)
 
     @projectSprint = TkVariable.new
-    @projectSprint.value = "0"
+    @projectSprint.value = 0
     sprintEntry.textvariable = @projectSprint
 
     # Hours availble for current sprint
@@ -386,6 +397,15 @@ class GuiManager
     taskCommitter.grid(                                   :row => 21, :column => 1, :sticky => 'news' )
     TkGrid(TkLabel.new(@sprintTab, :text => "Status"),    :row => 20, :column => 2)
     taskStatus.grid(                                      :row => 21, :column => 2, :sticky => 'news' )
+
+    TkGrid(TkLabel.new(@sprintTab, :text => 'Remaingin effort:'),  :row => 11, :column => 2)
+    @project.sprintlength.times.each do |i|
+      @effortsRemainingLabel.push(TkLabel.new(@sprintTab, :text => '0', :width => '3'))
+      TkGrid(@effortsRemainingLabel[i],  :row => 11, :column => 3+i)
+    end
+
+    TkGrid(TkLabel.new(@sprintTab, :text => " "), :row => 12, :column => numOfColumns + 1)
+
     @project.sprintlength.times.each do |i|
       TkGrid(TkLabel.new(@sprintTab, :text => DAYS[selectDay(i)]),  :row => 20, :column => 3+i)
     end
@@ -447,6 +467,8 @@ class GuiManager
 
     open_click = Proc.new {
       @controller.loadProject(Tk.getOpenFile(:filetypes => FILE_TYPES))
+      @projectSprint.value = @project.sprint
+      refreshView
     }
 
     new_click = Proc.new {
