@@ -19,13 +19,11 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
-
+#export TCL_LIBRARY=/cygdrive/d/Tcl/lib/tcl8.4 not needed
 
 require './guimanager'
 require './scrumbcontroller'
 require './project.rb'
-
-#export TCL_LIBRARY=/cygdrive/c/Tcl/lib/tcl8.4
 
 class ScrumBook
 

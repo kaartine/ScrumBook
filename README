@@ -10,3 +10,8 @@ Features:
   * Easy update of tasks
   * Easy navigation between sprints
   * One click coping of open tasks to new sprint
+
+Windows instructions:
+ install http://www.activestate.com/activetcl/downloads 8.4 version
+ install rubyinstaller 1.9.2
+ > gem install tk-win
