@@ -38,6 +38,8 @@ class GuiManager
     @project = project
     @effortsRemainingLabel = Array.new
     @effortsRemaining = Array.new
+
+    create_procs
   end
 
   def createGui( controller )
@@ -263,46 +265,6 @@ class GuiManager
       taskDurationEntry[i].textvariable = @taskDuration[i]
     end
 
-    procUpdateTask = Proc.new {
-      item = @sprintTaskTree.focus_item()
-      logger "procUpdateTask: " + item.inspect
-
-      task = @project.findTask(item.to_i)
-
-      updateTask(@sprintTaskTree.focus_item().to_i) if !item.nil?
-      refreshView(task.task_id)
-    }
-
-    procDeleteTask = Proc.new {
-      item = @sprintTaskTree.focus_item()
-      logger "procUpdateTask: " + item.inspect
-      if !item.nil?
-        @project.deleteTask(item.to_i)
-      end
-      refreshView
-    }
-
-
-    procAddNewTask = Proc.new {
-      logger "procAddNewTask: " + @taskName.inspect
-      task = Task.new(@taskName.value, @taskCommitter.value, @taskStatus.value)
-      @project.sprintlength.times.each  do |i|
-        task.addDuration(i, @taskDuration[i].value.to_i)
-        logger "task update w#{i}: " + task.duration[i].to_s
-      end
-      begin
-        @project.addNewTaskToSprint(task)
-      rescue ArgumentError
-        Tk.messageBox(
-            'type'    => "ok",
-            'icon'    => "info",
-            'title'   => "Title",
-            'message' => "You have to give name to your task!"
-          )
-      end
-      refreshView
-    }
-
     procAddNewSubTask = Proc.new {
       task = Task.new(@taskName.value, @taskCommitter.value, @taskStatus.value)
       @project.sprintlength.times.each  do |i|
@@ -323,55 +285,36 @@ class GuiManager
       refreshView
     }
 
-    procMoveTaskUp = Proc.new {
-      item = @sprintTaskTree.focus_item()
-      logger "procMoveTaskUp: " + item.inspect
-      if !item.nil?
-        @project.moveTaskUp(item.to_i)
-      end
-      refreshView(item)
-    }
-
-    procMoveTaskDown = Proc.new {
-      item = @sprintTaskTree.focus_item()
-      logger "procMoveTaskDown: " + item.inspect
-      if !item.nil?
-        @project.moveTaskDown(item.to_i)
-      end
-      refreshView(item)
-    }
-
-
     # Task update button
     copyButton = TkButton.new(@sprintTab) {
       text 'Copy open tasks'
-      command( procUpdateTask )
+      command( @procUpdateTask )
     }
 
     # Task update button
     updateButton = TkButton.new(@sprintTab) {
       text 'Update Task'
       underline 0
-      command( procUpdateTask )
+      command( @procUpdateTask )
     }
 
     # Task update button
     moveUpButton = TkButton.new(@sprintTab) {
       text 'Move up'
-      command( procMoveTaskUp)
+      command( @procMoveTaskUp)
         }
 
     # Task update button
     moveDownButton = TkButton.new(@sprintTab) {
       text 'Move Down'
-      command( procMoveTaskDown )
+      command( @procMoveTaskDown )
      }
 
     # Add new task button
     addNewTaskButton = TkButton.new(@sprintTab) {
       text 'Add new Task'
       underline 8
-      command( procAddNewTask )
+      command( @procAddNewTask )
      }
 
    addNewSubTaskButton = TkButton.new(@sprintTab) {
@@ -385,8 +328,15 @@ class GuiManager
     deleteButton = TkButton.new(@sprintTab) {
       text 'Delete Task'
       underline 0
-      command( procDeleteTask )
+      command( @procDeleteTask )
      }
+
+    task_comment = TkText.new(@sprintTab) do
+      width 30
+      height 5
+      borderwidth 1
+    #  font TkFont.new('times 12 bold')
+    end
 
     @sprintTaskTree.grid(        :row => 0, :column => 0, :columnspan => numOfColumns, :rowspan => 10, :sticky => 'news' )
     TkGrid(TkLabel.new(@sprintTab, :text => "Select your sprint:"), :row => 1, :column => numOfColumns + 2, :sticky => 'ne')
@@ -427,13 +377,16 @@ class GuiManager
     addNewTaskButton.grid(       :row => 22, :column => numOfColumns + 2, :sticky => 'nw' )
     addNewSubTaskButton.grid(    :row => 23, :column => numOfColumns + 2, :sticky => 'nw' )
 
-    TkGrid(TkLabel.new(@sprintTab, :text => ""), :row => 10, :column => 0)
+#    TkGrid(TkLabel.new(@sprintTab, :text => ""), :row => 10, :column => 0)
+
+    TkGrid(TkLabel.new(@sprintTab, :text => COMMENT), :row => 23, :column => 0)
+    task_comment.grid(           :row => 24, :column => 0, :columnspan => 4, :sticky => 'news')
 
     # Keyboard binnigs
-    @root.bind( "Control-u", procUpdateTask )
-    @root.bind( "Control-t", procAddNewTask )
+    @root.bind( "Control-u", @procUpdateTask )
+    @root.bind( "Control-t", @procAddNewTask )
     @root.bind( "Control-b", procAddNewSubTask )
-    @root.bind( "Control-d", procDeleteTask )
+    @root.bind( "Control-d", @procDeleteTask )
 
     @sprintTaskTree.bind("KeyRelease-Up", @changeTask)
     @sprintTaskTree.bind("KeyRelease-Down", @changeTask)
@@ -582,5 +535,65 @@ class GuiManager
 
     @project.clear
     refreshView
+  end
+
+  def create_procs
+    @procUpdateTask = Proc.new {
+      item = @sprintTaskTree.focus_item()
+      logger "procUpdateTask: " + item.inspect
+
+      task = @project.findTask(item.to_i)
+
+      updateTask(@sprintTaskTree.focus_item().to_i) if !item.nil?
+      refreshView(task.task_id)
+    }
+
+    @procDeleteTask = Proc.new {
+      item = @sprintTaskTree.focus_item()
+      logger "procUpdateTask: " + item.inspect
+      if !item.nil?
+        @project.deleteTask(item.to_i)
+      end
+      refreshView
+    }
+
+    @procAddNewTask = Proc.new {
+      logger "procAddNewTask: " + @taskName.inspect
+      task = Task.new(@taskName.value, @taskCommitter.value, @taskStatus.value)
+      @project.sprintlength.times.each  do |i|
+        task.addDuration(i, @taskDuration[i].value.to_i)
+        logger "task update w#{i}: " + task.duration[i].to_s
+      end
+      begin
+        @project.addNewTaskToSprint(task)
+      rescue ArgumentError
+        Tk.messageBox(
+            'type'    => "ok",
+            'icon'    => "info",
+            'title'   => "Title",
+            'message' => "You have to give name to your task!"
+          )
+      end
+      refreshView
+    }
+
+    @procMoveTaskUp = Proc.new {
+      item = @sprintTaskTree.focus_item()
+      logger "procMoveTaskUp: " + item.inspect
+      if !item.nil?
+        @project.moveTaskUp(item.to_i)
+      end
+      refreshView(item)
+    }
+
+    @procMoveTaskDown = Proc.new {
+      item = @sprintTaskTree.focus_item()
+      logger "procMoveTaskDown: " + item.inspect
+      if !item.nil?
+        @project.moveTaskDown(item.to_i)
+      end
+      refreshView(item)
+    }
+
   end
 end

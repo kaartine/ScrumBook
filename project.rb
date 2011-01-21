@@ -96,6 +96,12 @@ class Project
     @tasks[@sprint]
   end
 
+  def add_new_task_to_backlog(newTask)
+    if newTask.name.size == 0
+      raise ArgumentError, "Name is not set"
+    end
+  end
+
   def addNewTaskToSprint(newTask, parentTask_id=nil)
     if newTask.name.size == 0
       raise ArgumentError, "Name is not set"
@@ -221,7 +227,7 @@ end
 
 
 class Task
-  attr_accessor :committer, :status, :name, :project, :task_id
+  attr_accessor :committer, :status, :name, :project, :task_id, :estimate, :milestone, :comment
   attr_reader :duration, :tasks
 
   def initialize( name, committer, status )
@@ -250,6 +256,22 @@ class Task
     @project.modified unless @project.nil?
     @status = s.strip
   end
+
+  def estimate=(s)
+    @project.modified unless @project.nil?
+    @estimate = s.strip
+  end
+
+  def milestone=(s)
+    @project.modified unless @project.nil?
+    @milestone = s.strip
+  end
+
+  def comment=(s)
+    @project.modified unless @project.nil?
+    @comment = s.strip
+  end
+
 
   def addDuration(i, value)
     if Integer(value) && value >= 0

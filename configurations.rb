@@ -24,5 +24,15 @@ FILE_ENDING = '.scb'
 FILE_TYPES = [['ScrumBook Files', ["*#{FILE_ENDING}"]],
               ['All Files', ['*']]]
 TITLE = 'ScrumBook'
+
+TASK_NAME = 'Task name'
+MILESTONE = 'Milestone'
+ESTIMATE = 'Effort estimate'
+START_SPRINT = 'Starts on sprint'
+
+NEW_STATUS = 'Not started'
+
+COMMENT = 'Comment'
+
 WIDTH = 1000
 HEIGHT = 600
