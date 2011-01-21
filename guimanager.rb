@@ -23,11 +23,16 @@ require 'tkextlib/tile'
 
 
 require './configurations'
-require './helpfunctions.rb'
+require './helpfunctions'
+require './burndownview'
+require './backlogview'
 
 class GuiManager
 
   attr_accessor :project
+
+  include BurnDownView
+  include BacklogView
 
   def initialize(project)
     @project = project
@@ -147,15 +152,16 @@ class GuiManager
 
   def createTabs
     tab = Tk::Tile::Notebook.new(@root) do
-      width 1000
-      height 600
+      width WIDTH
+      height HEIGHT
     end
 
     createConfigTab(tab)
     createSprintTab(tab)
+    createBurnDownTab(tab)
+    create_backlog_tab(tab)
 
-    @burnDownTab = TkFrame.new(tab)
-
+    tab.add @backlog_tab, :text => 'Backlog'
     tab.add @sprintTab, :text => 'Sprint'
     tab.add @burnDownTab, :text => 'Burn Down'
     tab.add @configsTab , :text => 'Configs'
@@ -179,7 +185,7 @@ class GuiManager
   end
 
   def createSprintTab(tab)
-    @sprintTab = Tk::Tile::Frame.new(@sprintTab) {padding "3 3 12 12"}.grid(:sticky => 'nws')
+    @sprintTab = Tk::Tile::Frame.new(tab) {padding "3 3 12 12"}.grid(:sticky => 'nws')
     TkGrid.columnconfigure( @sprintTab, 0, :weight => 1 )
     TkGrid.rowconfigure( @sprintTab, 0, :weight => 1 )
 

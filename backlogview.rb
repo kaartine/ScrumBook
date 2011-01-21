@@ -18,11 +18,9 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-# Constants
-DAYS = ['Mo', 'Tu', 'We', 'Th', 'Fr']
-FILE_ENDING = '.scb'
-FILE_TYPES = [['ScrumBook Files', ["*#{FILE_ENDING}"]],
-              ['All Files', ['*']]]
-TITLE = 'ScrumBook'
-WIDTH = 1000
-HEIGHT = 600
+module BacklogView
+
+  def create_backlog_tab(tab)
+    @backlog_tab = TkFrame.new(tab)
+  end
+end

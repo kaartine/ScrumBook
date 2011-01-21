@@ -18,11 +18,33 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-# Constants
-DAYS = ['Mo', 'Tu', 'We', 'Th', 'Fr']
-FILE_ENDING = '.scb'
-FILE_TYPES = [['ScrumBook Files', ["*#{FILE_ENDING}"]],
-              ['All Files', ['*']]]
-TITLE = 'ScrumBook'
-WIDTH = 1000
-HEIGHT = 600
+module BurnDownView
+
+  def createBurnDownTab(tab)
+    @burnDownTab = TkCanvas.new(tab)
+
+    @sprintWidth = (WIDTH - 20) / @project.sprintlength
+    @sprintHeight = (HEIGHT - 20)
+    @sprintStartX = 10
+    @sprintStartY = 10
+
+    @sprintEndX   = 10 + @project.sprintlength*@sprintWidth
+    @sprintEndY   = 10 + @sprintHeight
+    @sprintMidleX = 5
+    @sprintMidleY = 5
+
+    TkcRectangle.new(@burnDownTab, 10,  10,    WIDTH-10,  HEIGHT-10,
+                         'width' => 1)
+
+    # day separators
+    @project.sprintlength.times do |i|
+      TkcLine.new(@burnDownTab, @sprintStartX+i*@sprintWidth, HEIGHT-30, @sprintStartX+i*@sprintWidth, HEIGHT-20)
+      TkLabel.new(@burnDownTab, :text => i).place( 'relx' => @sprintMidleX+i*@sprintMidleX, 'rely' => HEIGHT-30)
+    end
+
+    # Velocity
+    TkcLine.new(@burnDownTab, @sprintStartX+@sprintMidleX, @sprintStartY+@sprintMidleY,
+                              @sprintEndX-@sprintMidleX, @sprintHeight-@sprintMidleY)
+
+  end
+end
