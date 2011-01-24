@@ -330,9 +330,9 @@ module SprintView
     TkGrid(TkLabel.new(@sprintTab, :text => "Status"),    :row => 20, :column => 2)
     taskStatus.grid(                                      :row => 21, :column => 2, :sticky => 'news' )
 
-    TkGrid(TkLabel.new(@sprintTab, :text => 'Remaingin effort:'),  :row => 11, :column => 2)
+    TkGrid(TkLabel.new(@sprintTab, :text => 'Remaingin effort:') do font TkFont.new('Arial 12 bold') end,  :row => 11, :column => 2)
     @project.sprintlength.times.each do |i|
-      @effortsRemainingLabel.push(TkLabel.new(@sprintTab, :text => '0', :width => '3'))
+      @effortsRemainingLabel.push(TkLabel.new(@sprintTab, :text => '0', :width => '3') do font TkFont.new('Arial 10 bold') end)
       TkGrid(@effortsRemainingLabel[i],  :row => 11, :column => 3+i)
     end
 
