@@ -1,5 +1,5 @@
 #require File.expand_path(File.dirname(__FILE__) + '/../spec_helper')
-require './project'
+require './model/project'
 
 describe Project do
   after(:each) do

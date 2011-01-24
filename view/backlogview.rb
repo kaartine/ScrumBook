@@ -51,11 +51,12 @@ module BacklogView
       refreshView(task.task_id)
     }
 
-    @proc_add_new_backlog_item = Proc.new {
-      logger "proc_add_new_backlog_item: " + @taskName.inspect
-      task = Task.new(@taskName.value, '', NEW_STATUS)
-      task.milestone = @task_milestone
-      task.estimate = @task_estimate
+    proc_add_new_backlog_item = Proc.new {
+      logger "proc_add_new_backlog_item: " + @backlog_taskName.inspect
+      task = Task.new(@backlog_taskName.value, '', NEW_STATUS)
+      task.milestone = @backlog_task_milestone
+      task.estimate = @backlog_task_estimate
+      task.targetted_sprint = @backlog_task_targetted_sprint
       begin
         @project.add_new_task_to_backlog(task)
       rescue ArgumentError
@@ -70,61 +71,62 @@ module BacklogView
     }
 
     # Task update button
-    updateButton = TkButton.new(@backlog_tab) {
+    backlog_updateButton = TkButton.new(@backlog_tab) {
       text 'Update Task'
       underline 0
       command( @proc_update_backlog_item )
     }
 
     # Task update button
-    moveUpButton = TkButton.new(@backlog_tab) {
-      text 'Move up'
+    backlog_moveUpButton = TkButton.new(@backlog_tab) {
+      text 'Move Up'
       command( @procMoveTaskUp)
-        }
+    }
 
     # Task update button
-    moveDownButton = TkButton.new(@backlog_tab) {
+    backlog_moveDownButton = TkButton.new(@backlog_tab) {
       text 'Move Down'
       command( @procMoveTaskDown )
-     }
+    }
 
     # Add new task button
-    addNewTaskButton = TkButton.new(@backlog_tab) {
+    backlog_addNewTaskButton = TkButton.new(@backlog_tab) {
       text 'Add new Task'
       underline 8
-      command( @proc_add_new_backlog_item )
-     }
+      command( proc_add_new_backlog_item )
+    }
 
     # Delete selected task button
-    deleteButton = TkButton.new(@backlog_tab) {
+    backlog_deleteButton = TkButton.new(@backlog_tab) {
       text 'Delete Task'
       underline 0
       command( @procDeleteTask )
-     }
+    }
 
     # Task edition fields
-    @task_milestone = TkVariable.new
-    @task_effort = TkVariable.new
-    @task_for_sprint = Array.new
+    @backlog_task_name = TkVariable.new
+    @backlog_task_milestone = TkVariable.new
+    @backlog_task_effort = TkVariable.new
+    @backlog_task_targetted_sprint = Array.new
 
     task_name_entry = TkEntry.new(@backlog_tab)
-    task_name_entry.textvariable = @taskName
+    task_name_entry.textvariable = @backlog_task_name
 
     task_milestone_entry = TkEntry.new(@backlog_tab)
-    task_milestone_entry.textvariable = @task_milestone
+    task_milestone_entry.textvariable = @backlog_task_milestone
 
     task_estimate_entry = TkEntry.new(@backlog_tab)
-    task_estimate_entry.textvariable = @task_effort
+    task_estimate_entry.textvariable = @backlog_task_effort
 
-    task_for_sprint_entry = TkEntry.new(@backlog_tab)
-    task_for_sprint_entry.textvariable = @task_for_sprint
+    task_targetted_sprint_entry = TkEntry.new(@backlog_tab)
+    task_targetted_sprint_entry.textvariable = @backlog_task_targetted_sprint
 
-    task_comment = TkText.new(@backlog_tab) do
+    backlog_task_comment = TkText.new(@backlog_tab) {
       width 30
       height 5
       borderwidth 1
     #  font TkFont.new('times 12 bold')
-    end
+    }
 
     @backlog_tree.grid(        :row => 0, :column => 0, :columnspan => 4, :rowspan => 10, :sticky => 'news' )
 
@@ -135,17 +137,17 @@ module BacklogView
     TkGrid(TkLabel.new(@backlog_tab, :text => ESTIMATE), :row => 20, :column => 2)
     task_estimate_entry.grid(                             :row => 21, :column => 2, :sticky => 'news' )
     TkGrid(TkLabel.new(@backlog_tab, :text => START_SPRINT), :row => 20, :column => 3)
-    task_for_sprint_entry.grid(                              :row => 21, :column => 3, :sticky => 'news' )
+    task_targetted_sprint_entry.grid(                     :row => 21, :column => 3, :sticky => 'news' )
 
-    updateButton.grid(           :row => 21, :column => numOfColumns + 2, :sticky => 'nw' )
-    moveUpButton.grid(           :row => 21, :column => numOfColumns + 4, :sticky => 'nw' )
-    moveDownButton.grid(         :row => 22, :column => numOfColumns + 4, :sticky => 'nw' )
+    backlog_updateButton.grid(           :row => 21, :column => numOfColumns + 2, :sticky => 'nw' )
+    backlog_moveUpButton.grid(           :row => 21, :column => numOfColumns + 4, :sticky => 'nw' )
+    backlog_moveDownButton.grid(         :row => 22, :column => numOfColumns + 4, :sticky => 'nw' )
     TkGrid(TkLabel.new(@backlog_tab, :text => " "), :row => 23, :column => numOfColumns + 1)
-    deleteButton.grid(           :row => 24, :column => numOfColumns + 4, :sticky => 'nw' )
-    addNewTaskButton.grid(       :row => 22, :column => numOfColumns + 2, :sticky => 'nw' )
+    backlog_deleteButton.grid(           :row => 24, :column => numOfColumns + 4, :sticky => 'nw' )
+    backlog_addNewTaskButton.grid(       :row => 22, :column => numOfColumns + 2, :sticky => 'nw' )
 
     TkGrid(TkLabel.new(@backlog_tab, :text => COMMENT), :row => 23, :column => 0)
-    task_comment.grid(           :row => 24, :column => 0, :columnspan => 2, :sticky => 'news')
-
+    backlog_task_comment.grid(           :row => 24, :column => 0, :columnspan => 2, :sticky => 'news')
   end
+
 end

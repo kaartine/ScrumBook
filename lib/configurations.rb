@@ -28,7 +28,7 @@ TITLE = 'ScrumBook'
 TASK_NAME = 'Task name'
 MILESTONE = 'Milestone'
 ESTIMATE = 'Effort estimate'
-START_SPRINT = 'Starts on sprint'
+START_SPRINT = 'Targetted to sprint'
 
 NEW_STATUS = 'Not started'
 

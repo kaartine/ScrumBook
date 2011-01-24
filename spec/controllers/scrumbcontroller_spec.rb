@@ -1,4 +1,4 @@
-require './scrumbcontroller'
+require './controller/scrumbcontroller'
 
 describe ScrumBController do
 

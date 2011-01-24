@@ -21,9 +21,9 @@
 # THE SOFTWARE.
 #export TCL_LIBRARY=/cygdrive/d/Tcl/lib/tcl8.4 not needed
 
-require './guimanager'
-require './scrumbcontroller'
-require './project.rb'
+require './view/guimanager'
+require './controller/scrumbcontroller'
+require './model/project.rb'
 
 class ScrumBook
 

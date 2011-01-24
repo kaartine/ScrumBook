@@ -19,7 +19,7 @@
 # THE SOFTWARE.
 
 
-require './helpfunctions.rb'
+require './lib/helpfunctions.rb'
 
 class Project
 
@@ -37,6 +37,7 @@ class Project
     @not_saved = true
 
     @tasks = Hash.new
+    @backlog = Hash.new
     @sprint = 0
     @sprintHours = Hash.new
     @task_id = 1
@@ -234,6 +235,7 @@ class Task
     @name = name.strip
     @committer = committer.strip
     @status = status.strip
+    @comment = ''
     @duration = Array.new
     @duration.push("")
     @project = nil
@@ -269,7 +271,7 @@ class Task
 
   def comment=(s)
     @project.modified unless @project.nil?
-    @comment = s.strip
+    @comment = s
   end
 
 
