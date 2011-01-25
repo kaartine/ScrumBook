@@ -1,5 +1,3 @@
-#!ruby
-
 # Copyright (C) 2011 by Jukka Kaartinen
 
 # Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -19,23 +17,35 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
-#export TCL_LIBRARY=/cygdrive/d/Tcl/lib/tcl8.4 not needed
 
-require './view/guimanager'
-require './controller/scrumbcontroller'
-require './model/project.rb'
+class ProjectConfigurationView < TkFrame
 
-class ScrumBook
+  def initialize(tab)
+    super(tab)
 
-  def initialize
-    @guiManager = GuiManager.new
-    @controller = ScrumBController.new(@guiManager)
+    @project = Project.create
 
-    @guiManager.createGui(@controller)
+    #project name
+    nameEntry = TkEntry.new(self)
+    @projectName = TkVariable.new
+    @projectName.value = "Enter Project's name"
+    nameEntry.textvariable = @projectName
+    nameEntry.place('height' => 25,
+            'width'  => 150,
+            'x'      => 10,
+            'y'      => 10)
+  end
 
-    @controller.startApp
+  def refreshView(selected_item = nil?)
+    logger "TODO: refreshView not yet implemented for BurnDownView"
+  end
+
+  def update_project
+    @project = Project.create
+  end
+
+  def bind_shortcuts(root)
+    logger "TODO: bind_shortcuts not yet implemented for BurnDownView"
   end
 
 end
-
-ScrumBook.new

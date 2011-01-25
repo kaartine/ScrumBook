@@ -23,10 +23,8 @@ require 'yaml'
 
 class ScrumBController
 
-  attr_accessor :project
-
-  def initialize(project, gui)
-    @project = project
+  def initialize( gui )
+    @project = Project.create
     @gui = gui
   end
 

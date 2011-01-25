@@ -23,14 +23,16 @@ require 'tkextlib/tile'
 
 require './lib/configurations'
 require './lib/helpfunctions'
+
 require './view/backlogview'
 require './view/burndownview'
+require './view/projectconfigurationview'
 require './view/sprintview'
 
 class GuiManager
 
-  def initialize(project)
-    @project = project
+  def initialize()
+    @project = Project.create
   end
 
   def createGui( controller )
@@ -44,7 +46,7 @@ class GuiManager
   end
 
   def refreshView(selected_item = nil?)
-    @selected_tab.refreshView(selected_item) unless @selected.nil?
+    @selected_tab.refreshView(selected_item) unless @selected_tab.nil?
   end
 
   def refreshTitle
@@ -89,13 +91,16 @@ class GuiManager
     @views = Array.new
 
     # TODO: change these to classes
-    createConfigTab(@tab)
+    @configsTab = ProjectConfigurationView.new(@tab)
     @burnDownTab = BurnDownView.new(@tab)
     @sprintTab = SprintView.new(self, @tab)
     @backlog_tab = BacklogView.new(self, @tab)
     @views.push(@backlog_tab)
     @views.push(@sprintTab)
     @views.push(@burnDownTab)
+    @views.push(@configsTab)
+
+    @selected_tab = @backlog_tab
 
     tab_changed = Proc.new {
       logger "selected tab: #{@tab.selected}"
@@ -114,20 +119,6 @@ class GuiManager
     @tab.pack("expand" => "1", "fill" => "both")
 
     @tab.bind("<NotebookTabChanged>", tab_changed)
-  end
-
-  def createConfigTab(tab)
-    @configsTab = TkFrame.new(tab)
-
-    #project name
-    nameEntry = TkEntry.new(@configsTab)
-    @projectName = TkVariable.new
-    @projectName.value = "Enter Project's name"
-    nameEntry.textvariable = @projectName
-    nameEntry.place('height' => 25,
-            'width'  => 150,
-            'x'      => 10,
-            'y'      => 10)
   end
 
   def createMenu
