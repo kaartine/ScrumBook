@@ -18,10 +18,12 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-module BurnDownView
+class BurnDownView < TkCanvas
 
-  def createBurnDownTab(tab)
-    @burnDownTab = TkCanvas.new(tab)
+  def initialize(tab)
+    super(tab)
+
+    @project = Project.create
 
     @sprintWidth = (WIDTH - 20) / @project.sprintlength
     @sprintHeight = (HEIGHT - 20)
@@ -33,18 +35,31 @@ module BurnDownView
     @sprintMidleX = 5
     @sprintMidleY = 5
 
-    TkcRectangle.new(@burnDownTab, 10,  10,    WIDTH-10,  HEIGHT-10,
+    TkcRectangle.new(self, 10,  10,    WIDTH-10,  HEIGHT-10,
                          'width' => 1)
 
     # day separators
     @project.sprintlength.times do |i|
-      TkcLine.new(@burnDownTab, @sprintStartX+i*@sprintWidth, HEIGHT-30, @sprintStartX+i*@sprintWidth, HEIGHT-20)
-      TkLabel.new(@burnDownTab, :text => i).place( 'relx' => @sprintMidleX+i*@sprintMidleX, 'rely' => HEIGHT-30)
+      TkcLine.new(self, @sprintStartX+i*@sprintWidth, HEIGHT-30, @sprintStartX+i*@sprintWidth, HEIGHT-20)
+      TkLabel.new(self, :text => i).place( 'relx' => @sprintMidleX+i*@sprintMidleX, 'rely' => HEIGHT-30)
     end
 
     # Velocity
-    TkcLine.new(@burnDownTab, @sprintStartX+@sprintMidleX, @sprintStartY+@sprintMidleY,
+    TkcLine.new(self, @sprintStartX+@sprintMidleX, @sprintStartY+@sprintMidleY,
                               @sprintEndX-@sprintMidleX, @sprintHeight-@sprintMidleY)
 
   end
+
+  def refreshView(selected_item = nil?)
+    logger "TODO: refreshView not yet implemented for BurnDownView"
+  end
+
+  def update_project
+    @project = Project.create
+  end
+
+  def bind_shortcuts(root)
+    logger "TODO: bind_shortcuts not yet implemented for BurnDownView"
+  end
+
 end

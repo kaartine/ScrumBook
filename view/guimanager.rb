@@ -29,8 +29,6 @@ require './view/sprintview'
 
 class GuiManager
 
-  include BurnDownView
-
   def initialize(project)
     @project = project
   end
@@ -46,7 +44,7 @@ class GuiManager
   end
 
   def refreshView(selected_item = nil?)
-    @selected_tab.refreshView(selected_item)
+    @selected_tab.refreshView(selected_item) unless @selected.nil?
   end
 
   def refreshTitle
@@ -65,6 +63,9 @@ class GuiManager
   end
 
   def startMainLoop
+    @tab.select(@backlog_tab)
+    refreshTitle
+
     Tk.mainloop
   end
 
@@ -85,18 +86,16 @@ class GuiManager
       height HEIGHT
     end
 
-    $tab_c = @tab
-
     @views = Array.new
 
     # TODO: change these to classes
     createConfigTab(@tab)
-    createBurnDownTab(@tab)
-
+    @burnDownTab = BurnDownView.new(@tab)
     @sprintTab = SprintView.new(self, @tab)
     @backlog_tab = BacklogView.new(self, @tab)
     @views.push(@backlog_tab)
     @views.push(@sprintTab)
+    @views.push(@burnDownTab)
 
     tab_changed = Proc.new {
       logger "selected tab: #{@tab.selected}"
@@ -107,14 +106,14 @@ class GuiManager
       @selected_tab.refreshView
     }
 
-    @tab.bind("<NotebookTabChanged>", tab_changed)
-
-    @tab.add @sprintTab, :text => 'Sprint'
     @tab.add @backlog_tab, :text => 'Backlog'
+    @tab.add @sprintTab, :text => 'Sprint'
     @tab.add @burnDownTab, :text => 'Burn Down'
     @tab.add @configsTab , :text => 'Configs'
 
     @tab.pack("expand" => "1", "fill" => "both")
+
+    @tab.bind("<NotebookTabChanged>", tab_changed)
   end
 
   def createConfigTab(tab)
