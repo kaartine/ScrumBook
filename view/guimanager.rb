@@ -90,7 +90,6 @@ class GuiManager
 
     @views = Array.new
 
-    # TODO: change these to classes
     @configsTab = ProjectConfigurationView.new(@tab)
     @burnDownTab = BurnDownView.new(@tab)
     @sprintTab = SprintView.new(self, @tab)

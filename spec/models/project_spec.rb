@@ -256,4 +256,34 @@ describe Project do
     project.findTask(6).should == nil
   end
 
+  it "should be possible to copy tasks from backlog to sprint" do
+    project = Project.create
+    first = Task.new("first", "C", "open")
+    second = Task.new("second", "C", "closed")
+    third = Task.new("third", "C", "closed")
+    first.targetted_sprint = 2
+    second.targetted_sprint = 2
+    third.targetted_sprint = 3
+    project.add_new_task_to_backlog(first)
+    project.add_new_task_to_backlog(second)
+    project.add_new_task_to_backlog(third)
+    project.backlog.size.should == 3
+
+    project.getActiveSprintsTasks.should == nil
+
+    project.sprint = 2
+    project.getActiveSprintsTasks.should == nil
+
+    project.sprint = 1
+
+    project.copy_tasks_to_sprint([1,2])
+    project.getActiveSprintsTasks.should == nil
+
+    project.sprint = 2
+    project.getActiveSprintsTasks.size.should == 2
+
+project.copy_tasks_to_sprint([1,2])
+    lambda{project.copy_tasks_to_sprint([1,2])}.should raise_error
+  end
+
 end

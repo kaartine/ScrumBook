@@ -161,7 +161,22 @@ class BacklogView < Tk::Tile::Frame
 
     $proc_backlog_move_task_up = Proc.new { }
     $proc_backlog_move_task_down = Proc.new { }
-    $proc_backlog_copy_tasks_to_sprint = Proc.new { }
+
+    $proc_backlog_copy_tasks_to_sprint = Proc.new {
+      logger "proc_backlog_copy_tasks_to_sprint:"
+      tasks = @backlog_tree.selection.collect {|item|
+        item.to_i
+      }
+
+      begin
+        @project.copy_tasks_to_sprint(tasks)
+      rescue DublicateError => dublicates
+        @gui.openInformationDialog("Info", "Some tasks were not copied since they were already in the sprint. \n" +
+                                   "(IDs: #{dublicates.dublicates.join(", ").to_s})")
+
+        logger dublicates.dublicates.inspect
+      end
+    }
 
 
     # Task update button
@@ -214,11 +229,11 @@ class BacklogView < Tk::Tile::Frame
     task_name_entry = TkEntry.new(self)
     task_name_entry.textvariable = @backlog_task_name
 
-    task_milestone_entry = TkEntry.new(self)
-    task_milestone_entry.textvariable = @backlog_task_milestone
-
     task_estimate_entry = TkEntry.new(self)
     task_estimate_entry.textvariable = @backlog_task_estimate
+
+    task_milestone_entry = TkEntry.new(self)
+    task_milestone_entry.textvariable = @backlog_task_milestone
 
     task_targetted_sprint_entry = TkEntry.new(self)
     task_targetted_sprint_entry.textvariable = @backlog_task_targetted_sprint
@@ -246,6 +261,7 @@ class BacklogView < Tk::Tile::Frame
     backlog_moveUpButton.grid(           :row => 21, :column => 7, :sticky => 'nw' )
     backlog_moveDownButton.grid(         :row => 22, :column => 7, :sticky => 'nw' )
     TkGrid(TkLabel.new(self, :text => " "), :row => 23, :column => 5 + 1)
+    TkGrid(TkLabel.new(self, :text => " "), :row => 23, :column => 4)
     backlog_deleteButton.grid(           :row => 24, :column => 5, :sticky => 'nw' )
     backlog_addNewTaskButton.grid(       :row => 22, :column => 5, :sticky => 'nw' )
 

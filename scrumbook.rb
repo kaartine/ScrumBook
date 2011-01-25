@@ -28,6 +28,7 @@ require './model/project.rb'
 class ScrumBook
 
   def initialize
+
     @guiManager = GuiManager.new
     @controller = ScrumBController.new(@guiManager)
 

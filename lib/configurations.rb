@@ -26,7 +26,7 @@ FILE_TYPES = [['ScrumBook Files', ["*#{FILE_ENDING}"]],
 TITLE = 'ScrumBook'
 
 
-COPY_TO_SPRINT = 'Copy tasks to sprint'
+COPY_TO_SPRINT = 'Copy tasks to sprints'
 TASK_NAME = 'Task name'
 MILESTONE = 'Milestone'
 ESTIMATE = 'Effort estimate'

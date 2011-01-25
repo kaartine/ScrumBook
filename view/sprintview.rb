@@ -79,7 +79,7 @@ class SprintView < Tk::Tile::Frame
         @project.sprintlength.times.each do |i|
           @sprintTaskTree.set(t.task_id, "w#{i}", t.duration[i])
           @effortsRemaining.push(0) if @effortsRemaining[i].nil?
-          @effortsRemaining[i] += t.duration[i]
+          @effortsRemaining[i] += t.duration[i].to_i
         end
 
         @sprintTaskTree.tag_bind('clickapple', 'ButtonRelease-1', @changeTask)

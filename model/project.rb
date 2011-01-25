@@ -19,7 +19,16 @@
 # THE SOFTWARE.
 
 
-require './lib/helpfunctions.rb'
+require './lib/helpfunctions'
+
+class DublicateError < RuntimeError
+  attr :dublicates
+  def initialize(dublicates)
+    super
+    @dublicates = dublicates
+  end
+end
+
 
 class Project
 
@@ -103,7 +112,7 @@ class Project
     @not_saved = true
   end
 
-  def addNewTaskToSprint(newTask, parentTask_id=nil)
+  def add_new_task_to_sprint(newTask, sprint, parentTask_id=nil)
     if newTask.name.size == 0
       raise ArgumentError, "Name is not set"
     end
@@ -113,22 +122,27 @@ class Project
     end
 
     logger "before: " + @tasks.inspect, 4
-    if !@tasks.has_key?(@sprint)
-      @tasks[@sprint] = Array.new
+    if !@tasks.has_key?(sprint)
+      @tasks[sprint] = Array.new
     end
+
+    logger find_task_with(newTask.task_id, @tasks[sprint]).to_s
+
+    # don't allow same task to be inserted twice
+    raise DublicateError.new(nil), "Task already exists" unless find_task_with(newTask.task_id, @tasks[sprint]).nil?
 
     newTask.project = self
 
     if parentTask_id.nil?
       logger "no parent", 4
-      @tasks[@sprint].push(newTask)
-    elsif id = @tasks[@sprint].index(parentTask_id)
+      @tasks[sprint].push(newTask)
+    elsif id = @tasks[sprint].index(parentTask_id)
       logger "parent in first level", 4
-      @tasks[@sprint][id].addSubTask(newTask)
+      @tasks[sprint][id].addSubTask(newTask)
       parentFound = true
     else
       logger "parent is in lower levels", 4
-      @tasks[@sprint].each do |t|
+      @tasks[sprint].each do |t|
         if t.findAndPush(parentTask_id, newTask)
           parentFound = true
           break
@@ -141,9 +155,16 @@ class Project
       exit
     end
 
-    newTask.task_id = @task_id
-    @task_id += 1
+    if newTask.task_id == -1
+      newTask.task_id = @task_id
+      @task_id += 1
+    end
+
     @not_saved = true
+  end
+
+  def addNewTaskToSprint(newTask, parentTask_id=nil)
+    add_new_task_to_sprint(newTask, @sprint, parentTask_id)
   end
 
   def getSprintHours(sprint=nil)
@@ -243,6 +264,27 @@ class Project
     find_task_with(task_id, @backlog)
   end
 
+  def copy_tasks_to_sprint(task_ids)
+    logger task_ids.inspect
+    dublicates = Array.new
+    if Array(tasks)
+      task_ids.each do |task_id|
+        backlog_task = find_backlog_task(task_id)
+        logger backlog_task.task_id.to_s
+        if backlog_task
+          begin
+            add_new_task_to_sprint(backlog_task, backlog_task.targetted_sprint)
+          rescue DublicateError
+            dublicates.push(task_id)
+          end
+        end
+      end
+    end
+    if dublicates.size > 0
+      raise DublicateError.new(dublicates), "Some tasks already exists in sprint"
+    end
+  end
+
   private
 
   def initialize
@@ -250,6 +292,7 @@ class Project
   end
 
   def find_task_with(task_id, from_array)
+    return nil if from_array.nil?
     found = nil
     from_array.each do |t|
       found = t.find(task_id)
