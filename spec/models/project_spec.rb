@@ -88,6 +88,26 @@ describe Project do
     project.getSprintHours(2).should == 200
   end
 
+  it "should be possible to add and delete task to/from backlog" do
+    project = Project.create
+    first = Task.new("first", "C", "open")
+    second = Task.new("second", "C", "closed")
+    third = Task.new("third", "C", "closed")
+    project.add_new_task_to_backlog(first)
+    project.add_new_task_to_backlog(second)
+    project.add_new_task_to_backlog(third)
+    project.backlog.size.should == 3
+    project.find_backlog_task(2).should === second
+    project.deleteTask(second.task_id).should === second
+    project.deleteTask(second.task_id).should == nil
+    project.deleteTask(100).should == nil
+    project.backlog.size.should == 2
+    project.sprint = 1
+    project.deleteTask(first.task_id).should === first
+    project.sprint = 0
+    project.deleteTask(first.task_id).should === nil
+  end
+
   it "should be possible to delete tasks from project" do
     project = Project.create
     first = Task.new("first", "C", "open")

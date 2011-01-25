@@ -6,7 +6,7 @@ describe ScrumBController do
     @guiM = mock("GuiManager")
     @guiM.stub!(:refreshView)
 
-    @project = mock("Project")
+ #   mock("Project")
   end
 
   after(:each) do
@@ -14,17 +14,17 @@ describe ScrumBController do
   end
 
   it "should be possible to open project that is given as argument" do
-    controller = ScrumBController.new(@project, @guiM)
+    controller = ScrumBController.new(@guiM)
 
     ARGV[0] = "scrumbook.scb"
 
     @guiM.should_receive(:startMainLoop)
-    @guiM.should_receive(:project=)
+    @guiM.should_receive(:update_project)
     controller.startApp
   end
 
   it "should not be possible to open file that doesn't exists" do
-    controller = ScrumBController.new(@project, @guiM)
+    controller = ScrumBController.new(@guiM)
 
     ARGV[0] = "scrumbook_not_availabe.scb"
 

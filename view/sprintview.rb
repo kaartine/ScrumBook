@@ -232,7 +232,7 @@ class SprintView < Tk::Tile::Frame
       item = @sprintTaskTree.focus_item()
       logger "procUpdateTask: " + item.inspect
       if !item.nil?
-        @project.deleteTask(item.to_i)
+        @project.delete_sprint_task(item.to_i)
       end
       refreshView
     }

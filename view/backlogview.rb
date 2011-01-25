@@ -150,7 +150,19 @@ class BacklogView < Tk::Tile::Frame
       refreshView
     }
 
-    $proc_backlog_delete_task = Proc.new { }
+    $proc_backlog_delete_task = Proc.new {
+      item = @backlog_tree.focus_item()
+      logger "proc_backlog_delete_task: " + item.inspect
+      if !item.nil?
+        @project.delete_backlog_task(item.to_i)
+      end
+      refreshView
+    }
+
+    $proc_backlog_move_task_up = Proc.new { }
+    $proc_backlog_move_task_down = Proc.new { }
+    $proc_backlog_copy_tasks_to_sprint = Proc.new { }
+
 
     # Task update button
     backlog_updateButton = TkButton.new(self) {
@@ -162,13 +174,13 @@ class BacklogView < Tk::Tile::Frame
     # Task update button
     backlog_moveUpButton = TkButton.new(self) {
       text 'Move Up'
-      command( @procMoveTaskUp)
+      command( $proc_backlog_move_task_up)
     }
 
     # Task update button
     backlog_moveDownButton = TkButton.new(self) {
       text 'Move Down'
-      command( @procMoveTaskDown )
+      command( $proc_backlog_move_task_down )
     }
 
     # Add new task button
@@ -184,6 +196,14 @@ class BacklogView < Tk::Tile::Frame
       underline 0
       command( $proc_backlog_delete_task )
     }
+
+    # Copy selected tasks to sprint button
+    backlog_copy_button = TkButton.new(self) {
+      text COPY_TO_SPRINT
+      underline 0
+      command( $proc_backlog_copy_tasks_to_sprint )
+    }
+
 
     # Task edition fields
     @backlog_task_name = TkVariable.new
@@ -211,6 +231,8 @@ class BacklogView < Tk::Tile::Frame
 
     @backlog_tree.grid(        :row => 0, :column => 0, :columnspan => 4, :rowspan => 10, :sticky => 'news' )
 
+    backlog_copy_button.grid(              :row => 1, :column => 7, :sticky => 'new' )
+
     TkGrid(TkLabel.new(self, :text => TASK_NAME), :row => 20, :column => 0)
     task_name_entry.grid(                                 :row => 21, :column => 0, :sticky => 'news' )
     TkGrid(TkLabel.new(self, :text => ESTIMATE), :row => 20, :column => 1)
@@ -220,12 +242,12 @@ class BacklogView < Tk::Tile::Frame
     TkGrid(TkLabel.new(self, :text => TARGETTED_SPRINT), :row => 20, :column => 3)
     task_targetted_sprint_entry.grid(                     :row => 21, :column => 3, :sticky => 'news' )
 
-    backlog_updateButton.grid(           :row => 21, :column => numOfColumns + 2, :sticky => 'nw' )
-    backlog_moveUpButton.grid(           :row => 21, :column => numOfColumns + 4, :sticky => 'nw' )
-    backlog_moveDownButton.grid(         :row => 22, :column => numOfColumns + 4, :sticky => 'nw' )
-    TkGrid(TkLabel.new(self, :text => " "), :row => 23, :column => numOfColumns + 1)
-    backlog_deleteButton.grid(           :row => 24, :column => numOfColumns + 4, :sticky => 'nw' )
-    backlog_addNewTaskButton.grid(       :row => 22, :column => numOfColumns + 2, :sticky => 'nw' )
+    backlog_updateButton.grid(           :row => 21, :column => 5, :sticky => 'nw' )
+    backlog_moveUpButton.grid(           :row => 21, :column => 7, :sticky => 'nw' )
+    backlog_moveDownButton.grid(         :row => 22, :column => 7, :sticky => 'nw' )
+    TkGrid(TkLabel.new(self, :text => " "), :row => 23, :column => 5 + 1)
+    backlog_deleteButton.grid(           :row => 24, :column => 5, :sticky => 'nw' )
+    backlog_addNewTaskButton.grid(       :row => 22, :column => 5, :sticky => 'nw' )
 
     TkGrid(TkLabel.new(self, :text => COMMENT), :row => 23, :column => 0)
     @backlog_task_comment.grid(           :row => 24, :column => 0, :columnspan => 2, :sticky => 'news')

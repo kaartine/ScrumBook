@@ -101,6 +101,7 @@ class GuiManager
     @views.push(@configsTab)
 
     @selected_tab = @backlog_tab
+    @selected_tab.bind_shortcuts(@root)
 
     tab_changed = Proc.new {
       logger "selected tab: #{@tab.selected}"
@@ -249,6 +250,7 @@ class GuiManager
     end
 
     @project.clear
+    update_project
     refreshView
   end
 

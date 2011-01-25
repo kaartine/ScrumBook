@@ -23,9 +23,9 @@ require './lib/helpfunctions.rb'
 
 class Project
 
-  attr_accessor :name, :sprint, :sprintlength, :members, :tasks, :fileName, :backlog
+  attr_accessor :name, :sprint, :sprintlength, :members, :tasks, :fileName
 
-  attr_reader :sprintHours, :task_id, :not_saved
+  attr_reader :sprintHours, :task_id, :not_saved, :backlog
 
   private_class_method :new
 
@@ -167,7 +167,27 @@ class Project
   end
 
   def deleteTask(task_id)
-    logger "deleteTask id: #{task_id}", 4
+    deleted = delete_backlog_task(task_id)
+    deleted = delete_sprint_task(task_id) if deleted.nil?
+
+    deleted
+  end
+
+  def delete_backlog_task(task_id)
+    logger "delete_backlog_task id: #{task_id}", 4
+    return if @backlog.nil?
+    @not_saved = true
+
+    task = find_backlog_task(task_id)
+    if !task.nil?
+      return @backlog.delete(task_id)
+    end
+
+    nil
+  end
+
+  def delete_sprint_task(task_id)
+    logger "delete_sprint_task id: #{task_id}", 4
     return if @tasks[@sprint].nil?
     @not_saved = true
 
