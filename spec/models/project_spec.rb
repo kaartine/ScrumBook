@@ -6,6 +6,12 @@ describe Project do
     Project.delete
   end
 
+  it "should not be possible to create miltiple instances from Project" do
+    project = Project.create
+    project2 = Project.create
+    project2.should === project
+  end
+
   it "should not be in saved state when it is created" do
     project = Project.create
     project.saved?.should == false

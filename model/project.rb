@@ -23,25 +23,13 @@ require './lib/helpfunctions.rb'
 
 class Project
 
-  attr_accessor :name, :sprint, :sprintlength, :members, :tasks, :fileName
+  attr_accessor :name, :sprint, :sprintlength, :members, :tasks, :fileName, :backlog
 
   attr_reader :sprintHours, :task_id, :not_saved
 
   private_class_method :new
 
   @@project = nil
-
-  def initialize
-    @fileName = ""
-    @sprintlength = 10
-    @not_saved = true
-
-    @tasks = Hash.new
-    @backlog = Hash.new
-    @sprint = 0
-    @sprintHours = Hash.new
-    @task_id = 1
-  end
 
   def Project.loadModel(project)
     logger "Project.loadModel(project) #{project.inspect}", 4
@@ -63,6 +51,7 @@ class Project
     @sprintlength = 10
     @not_saved = true
 
+    @backlog = Array.new
     @tasks = Hash.new
     @sprint = 0
     @sprintHours = Hash.new
@@ -76,6 +65,7 @@ class Project
     @not_saved = project.not_saved
 
     @tasks = project.tasks
+    @backlog = project.backlog
     @sprint = project.sprint
     @sprintHours = project.sprintHours
     @task_id = project.task_id
@@ -101,6 +91,16 @@ class Project
     if newTask.name.size == 0
       raise ArgumentError, "Name is not set"
     end
+
+    @backlog = Array.new if @backlog.nil?
+
+    newTask.project = self
+    logger "no parent", 4
+    @backlog.push(newTask)
+
+    newTask.task_id = @task_id
+    @task_id += 1
+    @not_saved = true
   end
 
   def addNewTaskToSprint(newTask, parentTask_id=nil)
@@ -216,8 +216,22 @@ class Project
   end
 
   def findTask(task_id)
+    find_task_with(task_id, @tasks[@sprint])
+  end
+
+  def find_backlog_task(task_id)
+    find_task_with(task_id, @backlog)
+  end
+
+  private
+
+  def initialize
+    clear
+  end
+
+  def find_task_with(task_id, from_array)
     found = nil
-    @tasks[@sprint].each do |t|
+    from_array.each do |t|
       found = t.find(task_id)
       break if !found.nil?
     end
@@ -228,7 +242,7 @@ end
 
 
 class Task
-  attr_accessor :committer, :status, :name, :project, :task_id, :estimate, :milestone, :comment
+  attr_accessor :committer, :status, :name, :project, :task_id, :estimate, :milestone, :comment, :targetted_sprint
   attr_reader :duration, :tasks
 
   def initialize( name, committer, status )
@@ -236,6 +250,7 @@ class Task
     @committer = committer.strip
     @status = status.strip
     @comment = ''
+    @targetted_sprint = 0
     @duration = Array.new
     @duration.push("")
     @project = nil
@@ -274,6 +289,14 @@ class Task
     @comment = s
   end
 
+  def targetted_sprint=(value)
+    if Integer(value) && value >= 0
+      @project.modified unless @project.nil?
+      @targetted_sprint = value
+    elsif value.size > 0
+      raise ArgumentError, "Duration should be positive integer or zero"
+    end
+  end
 
   def addDuration(i, value)
     if Integer(value) && value >= 0

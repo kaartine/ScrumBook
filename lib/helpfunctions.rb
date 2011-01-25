@@ -28,7 +28,7 @@ end
 
 def numOfColumns
   # task name, commiter, status, sprints
-  1 + 1 + 1 + @project.sprintlength
+  1 + 1 + 1 + Project.create.sprintlength
 end
 
 

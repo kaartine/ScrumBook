@@ -57,7 +57,7 @@ class ScrumBController
     serial = file.read
     file.close
     @project = Project.loadModel( YAML.load( serial ) )
-    @gui.project = @project
+    @gui.update_project
 
     logger "serial: " + serial.inspect, 4
 

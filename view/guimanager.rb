@@ -29,18 +29,10 @@ require './view/sprintview'
 
 class GuiManager
 
-  attr_accessor :project
-
   include BurnDownView
-  include BacklogView
-  include SprintView
 
   def initialize(project)
     @project = project
-    @effortsRemainingLabel = Array.new
-    @effortsRemaining = Array.new
-
-    create_procs
   end
 
   def createGui( controller )
@@ -54,10 +46,7 @@ class GuiManager
   end
 
   def refreshView(selected_item = nil?)
-    refreshSprint(selected_item)
-    refreshTaskEditor
-
-    refreshTitle
+    @selected_tab.refreshView(selected_item)
   end
 
   def refreshTitle
@@ -79,25 +68,53 @@ class GuiManager
     Tk.mainloop
   end
 
+  def update_project
+    @project = Project.create
+
+    @views.each do |view|
+      view.update_project
+    end
+  end
+
+
   private
 
   def createTabs
-    tab = Tk::Tile::Notebook.new(@root) do
+    @tab = Tk::Tile::Notebook.new(@root) do
       width WIDTH
       height HEIGHT
     end
 
-    createConfigTab(tab)
-    create_sprint_tab(tab)
-    createBurnDownTab(tab)
-    create_backlog_tab(tab)
+    $tab_c = @tab
 
-    tab.add @backlog_tab, :text => 'Backlog'
-    tab.add @sprintTab, :text => 'Sprint'
-    tab.add @burnDownTab, :text => 'Burn Down'
-    tab.add @configsTab , :text => 'Configs'
+    @views = Array.new
 
-    tab.pack("expand" => "1", "fill" => "both")
+    # TODO: change these to classes
+    createConfigTab(@tab)
+    createBurnDownTab(@tab)
+
+    @sprintTab = SprintView.new(self, @tab)
+    @backlog_tab = BacklogView.new(self, @tab)
+    @views.push(@backlog_tab)
+    @views.push(@sprintTab)
+
+    tab_changed = Proc.new {
+      logger "selected tab: #{@tab.selected}"
+      @selected_tab = @tab.selected
+
+      # Upadate keyboard binnigs
+      @selected_tab.bind_shortcuts(@root)
+      @selected_tab.refreshView
+    }
+
+    @tab.bind("<NotebookTabChanged>", tab_changed)
+
+    @tab.add @sprintTab, :text => 'Sprint'
+    @tab.add @backlog_tab, :text => 'Backlog'
+    @tab.add @burnDownTab, :text => 'Burn Down'
+    @tab.add @configsTab , :text => 'Configs'
+
+    @tab.pack("expand" => "1", "fill" => "both")
   end
 
   def createConfigTab(tab)
@@ -245,13 +262,4 @@ class GuiManager
     refreshView
   end
 
-  def create_procs
-    @changeSprint = Proc.new {
-      refreshView
-    }
-
-    @changeTask = Proc.new {
-      refreshTaskEditor
-    }
-  end
 end
