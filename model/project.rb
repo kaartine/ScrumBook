@@ -58,7 +58,7 @@ class Project
   def clear
     @fileName = ""
     @sprintlength = 10
-    @not_saved = true
+    modified
 
     @backlog = Array.new
     @tasks = Hash.new
@@ -109,7 +109,7 @@ class Project
 
     newTask.task_id = @task_id
     @task_id += 1
-    @not_saved = true
+    modified
   end
 
   def add_new_task_to_sprint(newTask, sprint, parentTask_id=nil)
@@ -160,7 +160,7 @@ class Project
       @task_id += 1
     end
 
-    @not_saved = true
+    modified
   end
 
   def addNewTaskToSprint(newTask, parentTask_id=nil)
@@ -183,13 +183,14 @@ class Project
     if !sprint.nil?
       index = sprint
     end
-    @not_saved = true
+    modified
     @sprintHours[index] = hours
   end
 
   def deleteTask(task_id)
     deleted = delete_backlog_task(task_id)
     deleted = delete_sprint_task(task_id) if deleted.nil?
+    modified unless deleted.nil?
 
     deleted
   end
@@ -197,7 +198,7 @@ class Project
   def delete_backlog_task(task_id)
     logger "delete_backlog_task id: #{task_id}", 4
     return if @backlog.nil?
-    @not_saved = true
+    modified
 
     task = find_backlog_task(task_id)
     if !task.nil?
@@ -210,7 +211,7 @@ class Project
   def delete_sprint_task(task_id)
     logger "delete_sprint_task id: #{task_id}", 4
     return if @tasks[@sprint].nil?
-    @not_saved = true
+    modified
 
     task = findTask(task_id)
     if !task.nil? && !task.parent.nil?
@@ -235,7 +236,7 @@ class Project
     if id1 == 0 || tasks.size <= 1
       return
     end
-    @not_saved = true
+    modified
     tasks[id1-1], tasks[id1] = tasks[id1], tasks[id1-1]
   end
 
@@ -252,7 +253,7 @@ class Project
     if id1 == tasks.size-1 || tasks.size <= 1
       return
     end
-    @not_saved = true
+    modified
     tasks[id1], tasks[id1+1] = tasks[id1+1], tasks[id1]
   end
 

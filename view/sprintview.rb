@@ -115,6 +115,18 @@ class SprintView < Tk::Tile::Frame
     end
   end
 
+  def create_new_task
+    task = Task.new(@taskName.value, @taskCommitter.value, @taskStatus.value)
+    task.comment = @task_comment.value
+    @project.sprintlength.times.each  do |i|
+      task.addDuration(i, @taskDuration[i].value.to_i)
+      logger "task update w#{i}: " + task.duration[i].to_s
+    end
+
+    task
+  end
+
+
   def initialize(guiManager, tab)
     super(tab) {padding "3 3 12 12"}
     grid(:sticky => 'nws')
@@ -197,12 +209,7 @@ class SprintView < Tk::Tile::Frame
     end
 
     $proc_sprint_add_new_sub_task = Proc.new {
-      task = Task.new(@taskName.value, @taskCommitter.value, @taskStatus.value)
-      task.comment = @task_comment.value
-      @project.sprintlength.times.each  do |i|
-        task.addDuration(i, @taskDuration[i].value.to_i)
-        logger "task update w#{i}: " + task.duration[i].to_s
-      end
+      task = create_new_task
       begin
         parent_id = @sprintTaskTree.focus_item().to_i
         @project.addNewTaskToSprint(task, parent_id)
@@ -238,12 +245,8 @@ class SprintView < Tk::Tile::Frame
     }
 
     $proc_sprint_add_new_task = Proc.new {
-      logger "procAddNewTask: " + @taskName.inspect
-      task = Task.new(@taskName.value, @taskCommitter.value, @taskStatus.value)
-      @project.sprintlength.times.each  do |i|
-        task.addDuration(i, @taskDuration[i].value.to_i)
-        logger "task update w#{i}: " + task.duration[i].to_s
-      end
+      logger "proc_sprint_add_new_task: " + @taskName.inspect
+      task = create_new_task
       begin
         @project.addNewTaskToSprint(task)
       rescue ArgumentError

@@ -131,7 +131,7 @@ class BacklogView < Tk::Tile::Frame
     }
 
     $proc_add_new_backlog_item = Proc.new {
-      logger "proc_add_new_backlog_item: " + @backlog_task_name.inspect
+      logger "proc_add_new_backlog_item: " + @backlog_task_name.value
       task = Task.new(@backlog_task_name.value, '', NEW_STATUS)
       task.milestone = @backlog_task_milestone.value
       task.estimate = @backlog_task_estimate.value
@@ -176,6 +176,7 @@ class BacklogView < Tk::Tile::Frame
 
         logger dublicates.dublicates.inspect
       end
+      refreshView
     }
 
 
