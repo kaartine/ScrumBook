@@ -393,6 +393,7 @@ class SprintView < Tk::Tile::Frame
 
   def update_project
     @project = Project.create
+    @projectSprint.value = @project.sprint
   end
 
   def bind_shortcuts(root)

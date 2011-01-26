@@ -141,7 +141,6 @@ class GuiManager
 
     open_click = Proc.new {
       @controller.loadProject(Tk.getOpenFile(:filetypes => FILE_TYPES))
-      @projectSprint.value = @project.sprint
       refreshView
     }
 

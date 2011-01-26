@@ -246,7 +246,7 @@ class BacklogView < Tk::Tile::Frame
 
     @backlog_tree.grid(        :row => 0, :column => 0, :columnspan => 4, :rowspan => 10, :sticky => 'news' )
 
-    backlog_copy_button.grid(              :row => 1, :column => 7, :sticky => 'new' )
+    backlog_copy_button.grid(              :row => 1, :column => 5, :sticky => 'new' )
 
     TkGrid(TkLabel.new(self, :text => TASK_NAME), :row => 20, :column => 0)
     task_name_entry.grid(                                 :row => 21, :column => 0, :sticky => 'news' )
