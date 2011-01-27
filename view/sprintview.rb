@@ -71,7 +71,10 @@ class SprintView < Tk::Tile::Frame
         logger "add task id: #{t.task_id}", 4
         root = ''
         root = parent.task_id unless parent.nil?
-        temp = @sprintTaskTree.insert(root, 'end', :id => t.task_id, :text => t.name, :tags => ['clickapple'])
+        tags = Array.new
+        tags.push('clickapple')
+        tags.push('reference') if t.backlog_task
+        temp = @sprintTaskTree.insert(root, 'end', :id => t.task_id, :text => t.name, :tags => tags)
         @sprintTaskTree.set( t.task_id, 'committer', t.committer)
         @sprintTaskTree.set( t.task_id, 'status', t.status)
         @sprintTaskTree.itemconfigure(t.task_id, 'open', true)
@@ -82,10 +85,12 @@ class SprintView < Tk::Tile::Frame
           @effortsRemaining[i] += t.duration[i].to_i
         end
 
-        @sprintTaskTree.tag_bind('clickapple', 'ButtonRelease-1', @changeTask)
         logger "t.tasks: #{t.tasks.inspect}", 4
         fillTasks(t.tasks, t)
       end
+        # change background color of item if it is reference from backlog
+        @sprintTaskTree.tag_configure('reference', :background => 'yellow')
+        @sprintTaskTree.tag_bind('clickapple', 'ButtonRelease-1', @changeTask)
     end
   end
 
@@ -173,9 +178,10 @@ class SprintView < Tk::Tile::Frame
     @sprintTaskTree['columns'] = columns.to_s
     logger @sprintTaskTree['columns'], 4
 
+    @sprintTaskTree.heading_configure( '#0', :text => TASK_NAME)
     @sprintTaskTree.column_configure( 'committer', :width => 70, :anchor => 'center')
-    @sprintTaskTree.heading_configure( 'committer', :text => 'Committer')
-    @sprintTaskTree.heading_configure( 'status', :text => 'Status')
+    @sprintTaskTree.heading_configure( 'committer', :text => COMMITTER)
+    @sprintTaskTree.heading_configure( 'status', :text => STATUS)
 
     @project.sprintlength.times.each do |d|
       @sprintTaskTree.heading_configure( "w#{d}", :text => DAYS[selectDay(d)])
@@ -332,7 +338,7 @@ class SprintView < Tk::Tile::Frame
     }
 
     @sprintTaskTree.grid(        :row => 0, :column => 0, :columnspan => numOfColumns, :rowspan => 10, :sticky => 'news' )
-    TkGrid(TkLabel.new(self, :text => "Select your sprint:"), :row => 1, :column => numOfColumns + 2, :sticky => 'ne')
+    TkGrid(TkLabel.new(self, :text => SELECT_SPRINT), :row => 1, :column => numOfColumns + 2, :sticky => 'ne')
     sprintEntry.grid(            :row => 1, :column => numOfColumns + 3, :columnspan => 2,:sticky => 'nw' )
     TkGrid(TkLabel.new(self, :text => " "), :row => 1, :column => numOfColumns + 1)
     TkGrid(TkLabel.new(self, :text => " "), :row => 0, :column => numOfColumns + 3)
@@ -340,11 +346,11 @@ class SprintView < Tk::Tile::Frame
     hoursAvailable.grid(         :row => 2, :column => numOfColumns + 3, :columnspan => 2, :sticky => 'nw' )
     copyButton.grid(             :row => 4, :column => numOfColumns + 2, :sticky => 'ne' )
 
-    TkGrid(TkLabel.new(self, :text => "Task name"), :row => 20, :column => 0)
+    TkGrid(TkLabel.new(self, :text => "Task"), :row => 20, :column => 0)
     taskNameEntry.grid(                                   :row => 21, :column => 0, :sticky => 'news' )
-    TkGrid(TkLabel.new(self, :text => "Committer"), :row => 20, :column => 1)
+    TkGrid(TkLabel.new(self, :text => COMMITTER), :row => 20, :column => 1)
     taskCommitter.grid(                                   :row => 21, :column => 1, :sticky => 'news' )
-    TkGrid(TkLabel.new(self, :text => "Status"),    :row => 20, :column => 2)
+    TkGrid(TkLabel.new(self, :text => STATUS),    :row => 20, :column => 2)
     taskStatus.grid(                                      :row => 21, :column => 2, :sticky => 'news' )
 
     TkGrid(TkLabel.new(self, :text => 'Remaingin effort:') do font TkFont.new('Arial 12 bold') end,  :row => 11, :column => 2)

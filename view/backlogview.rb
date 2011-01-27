@@ -108,6 +108,7 @@ class BacklogView < Tk::Tile::Frame
     @backlog_tree['columns'] = columns.to_s
 
     @backlog_tree.column_configure( '#0', :width => 400, :anchor => 'center')
+    @backlog_tree.heading_configure( '#0', :text => TASK_NAME)
     @backlog_tree.heading_configure( 'estimate', :text => ESTIMATE)
     @backlog_tree.column_configure( 'estimate', :width => 60, :anchor => 'center')
     @backlog_tree.heading_configure( 'milestone', :text => MILESTONE)

@@ -282,7 +282,6 @@ describe Project do
     project.sprint = 2
     project.getActiveSprintsTasks.size.should == 2
 
-project.copy_tasks_to_sprint([1,2])
     lambda{project.copy_tasks_to_sprint([1,2])}.should raise_error
   end
 

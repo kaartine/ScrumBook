@@ -26,15 +26,17 @@ FILE_TYPES = [['ScrumBook Files', ["*#{FILE_ENDING}"]],
 TITLE = 'ScrumBook'
 
 
-COPY_TO_SPRINT = 'Copy tasks to sprints'
-TASK_NAME = 'Task name'
-MILESTONE = 'Milestone'
-ESTIMATE = 'Effort estimate'
-TARGETTED_SPRINT = 'Targetted to sprint'
-
-NEW_STATUS = 'Not started'
-
 COMMENT = 'Comment'
+COMMITTER = 'Committer'
+COPY_TO_SPRINT = 'Copy tasks to sprints'
+ESTIMATE = 'Effort estimate'
+MILESTONE = 'Milestone'
+NEW_STATUS = 'Not started'
+STATUS = 'Status'
+SELECT_SPRINT = 'Select your sprint:'
+TARGETTED_SPRINT = 'Targetted to sprint'
+TASK_NAME = 'Task'
+
 
 WIDTH = 1000
 HEIGHT = 600

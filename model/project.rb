@@ -126,8 +126,6 @@ class Project
       @tasks[sprint] = Array.new
     end
 
-    logger find_task_with(newTask.task_id, @tasks[sprint]).to_s
-
     # don't allow same task to be inserted twice
     raise DublicateError.new(nil), "Task already exists" unless find_task_with(newTask.task_id, @tasks[sprint]).nil?
 
@@ -266,15 +264,16 @@ class Project
   end
 
   def copy_tasks_to_sprint(task_ids)
-    logger task_ids.inspect
+    logger task_id.inspect, 4
     dublicates = Array.new
     if Array(tasks)
       task_ids.each do |task_id|
         backlog_task = find_backlog_task(task_id)
-        logger backlog_task.task_id.to_s
+        logger backlog_task.task_id.to_s, 4
         if backlog_task
           begin
             add_new_task_to_sprint(backlog_task, backlog_task.targetted_sprint)
+            backlog_task.backlog_task = true
           rescue DublicateError
             dublicates.push(task_id)
           end
@@ -306,7 +305,7 @@ end
 
 
 class Task
-  attr_accessor :committer, :status, :name, :project, :task_id, :estimate, :milestone, :comment, :targetted_sprint
+  attr_accessor :committer, :status, :name, :project, :task_id, :estimate, :milestone, :comment, :targetted_sprint, :backlog_task
   attr_reader :duration, :tasks
 
   def initialize( name, committer, status )
@@ -321,6 +320,7 @@ class Task
     @tasks = Array.new
     @task_id = -1
     @parent = nil
+    @backlog_task = false
   end
 
   def name=(n)
