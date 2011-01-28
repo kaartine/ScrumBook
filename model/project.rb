@@ -29,6 +29,9 @@ class DublicateError < RuntimeError
   end
 end
 
+class ParentError < RuntimeError
+end
+
 
 class Project
 
@@ -130,6 +133,7 @@ class Project
     raise DublicateError.new(nil), "Task already exists" unless find_task_with(newTask.task_id, @tasks[sprint]).nil?
 
     newTask.project = self
+    parentFound = false
 
     if parentTask_id.nil?
       logger "no parent", 4
@@ -148,9 +152,8 @@ class Project
       end
     end
 
-    if parentTask_id && parentFound == false
-      logger "BUG: parent was not found: " + parentTask_id
-      exit
+    if !parentTask_id.nil? && parentFound == false
+      raise ParentError, "Parent was not found"
     end
 
     if newTask.task_id == -1
@@ -158,7 +161,7 @@ class Project
       @task_id += 1
     end
 
-    modified
+    modified if parentFound
   end
 
   def addNewTaskToSprint(newTask, parentTask_id=nil)
@@ -377,6 +380,7 @@ class Task
     @project.modified unless @project.nil?
     newTask.parent = self.task_id
     @tasks.push(newTask)
+    true
   end
 
   def ==(id)
@@ -401,7 +405,7 @@ class Task
   end
 
   def findAndPush(parentTask_id, newTask)
-    found = nil
+    found = false
     if @task_id == parentTask_id
       return addSubTask(newTask)
     else

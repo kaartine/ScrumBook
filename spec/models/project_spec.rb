@@ -27,10 +27,10 @@ describe Project do
     # add new task to first sprint that is 0
     project = Project.create
     task = Task.new("first", "C", "open")
-    project.addNewTaskToSprint(task).should == true
+    project.addNewTaskToSprint(task)
     project.getActiveSprintsTasks.size.should == 1
     task = Task.new("second", "C", "open")
-    project.addNewTaskToSprint(task).should == true
+    project.addNewTaskToSprint(task)
     project.getActiveSprintsTasks.size.should == 2
 
     tasks = project.getActiveSprintsTasks
@@ -154,6 +154,19 @@ describe Project do
     project.findTask(7).name.should == "find also me"
     project.findTask(7).parent.should === second
   end
+
+  it "should not be possible to add sub task that doens't have parent" do
+    project = Project.create
+    first = Task.new("first", "C", "open")
+    lambda{ project.addNewTaskToSprint(first, 0) }.should raise_error
+
+    project.getActiveSprintsTasks.size.should == 0
+
+    project.findTask(0).should === nil
+    project.findTask(1).should === nil
+    project.findTask(2).should === nil
+  end
+
 
   it "should be possible to move task up" do
     project = Project.create

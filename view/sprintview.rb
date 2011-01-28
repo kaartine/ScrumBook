@@ -89,7 +89,7 @@ class SprintView < Tk::Tile::Frame
         fillTasks(t.tasks, t)
       end
         # change background color of item if it is reference from backlog
-        @sprintTaskTree.tag_configure('reference', :background => 'yellow')
+        @sprintTaskTree.tag_configure('reference', :background => 'green')
         @sprintTaskTree.tag_bind('clickapple', 'ButtonRelease-1', @changeTask)
     end
   end
@@ -109,6 +109,12 @@ class SprintView < Tk::Tile::Frame
       @project.sprintlength.times.each  do |i|
         @taskDuration[i].value = task.duration[i]
       end
+
+      @moveUpButton.configure( :state => 'normal' )
+      @moveDownButton.configure( :state => 'normal' )
+      @deleteButton.configure( :state => 'normal' )
+      @addNewTaskButton.configure( :state => 'normal' )
+      @addNewSubTaskButton.configure( :state => 'normal' )
     else
       @taskName.value = ''
       @taskCommitter.value = ''
@@ -117,7 +123,16 @@ class SprintView < Tk::Tile::Frame
       @project.sprintlength.times.each  do |i|
         @taskDuration[i].value = ''
       end
+
+      @moveUpButton.configure( :state => 'disabled' )
+      @moveDownButton.configure( :state => 'disabled' )
+      @deleteButton.configure( :state => 'disabled' )
+      @addNewTaskButton.configure( :state => 'disabled' )
+      @addNewSubTaskButton.configure( :state => 'disabled' )
     end
+
+    # disable update button
+    @updateButton.configure( :state => 'disabled' )
   end
 
   def create_new_task
@@ -198,14 +213,26 @@ class SprintView < Tk::Tile::Frame
       @taskDuration.push(TkVariable.new)
     end
 
-    taskNameEntry = TkEntry.new(self) {width 33}
+    $proc_activate_buttons = Proc.new {
+      item = @sprintTaskTree.focus_item()
+      unless item.nil?
+        @updateButton.configure( :state => 'normal' )
+      else
+        @addNewTaskButton.configure( :state => 'normal' )
+      end
+    }
+
+    taskNameEntry = TkEntry.new(self) { width 33 }
     taskNameEntry.textvariable = @taskName
+    taskNameEntry.bind( "KeyPress", $proc_activate_buttons )
 
     taskCommitter = TkEntry.new(self) #{width 10} #Tk::Tile::ComboBox.new(self)
     taskCommitter.textvariable = @taskCommitter
+    taskCommitter.bind( "KeyPress", $proc_activate_buttons )
 
     taskStatus = TkEntry.new(self) #{width 15} #Tk::Tile::ComboBox.new(self)
     taskStatus.textvariable = @taskStatus
+    taskStatus.bind( "KeyPress", $proc_activate_buttons )
 
     taskDurationEntry = Array.new
     @project.sprintlength.times.each do |i|
@@ -213,12 +240,22 @@ class SprintView < Tk::Tile::Frame
         width 3
       end)
       taskDurationEntry[i].textvariable = @taskDuration[i]
+      taskDurationEntry[i].bind( "KeyPress", $proc_activate_buttons )
     end
+
+    @task_comment = TkText.new(self) {
+      width 30
+      height 5
+      borderwidth 1
+    }
+    @task_comment.bind( "KeyPress", $proc_activate_buttons )
+
 
     $proc_sprint_add_new_sub_task = Proc.new {
       task = create_new_task
       begin
         parent_id = @sprintTaskTree.focus_item().to_i
+        logger "proc_sprint_add_new_sub_task #{parent_id}"
         @project.addNewTaskToSprint(task, parent_id)
       rescue ArgumentError
         Tk.messageBox(
@@ -226,6 +263,13 @@ class SprintView < Tk::Tile::Frame
             'icon'    => "info",
             'title'   => "Title",
             'message' => "You have to give name to your task!"
+          )
+      rescue ParentError
+          Tk.messageBox(
+            'type'    => "ok",
+            'icon'    => "info",
+            'title'   => "Title",
+            'message' => "Error: Parent was not found!"
           )
       end
       refreshView
@@ -293,49 +337,46 @@ class SprintView < Tk::Tile::Frame
     }
 
     # Task update button
-    updateButton = TkButton.new(self) {
+    @updateButton = TkButton.new(self) {
       text 'Update Task'
       underline 0
       command( $proc_sprint_update_task )
+      state 'disabled'
     }
 
     # Task update button
-    moveUpButton = TkButton.new(self) {
+    @moveUpButton = TkButton.new(self) {
       text 'Move Up'
+      state 'disabled'
       command( $proc_sprint_move_task_up)
     }
 
     # Task update button
-    moveDownButton = TkButton.new(self) {
+    @moveDownButton = TkButton.new(self) {
       text 'Move Down'
+      state 'disabled'
       command( $proc_move_task_down )
     }
 
     # Add new task button
-    addNewTaskButton = TkButton.new(self) {
+    @addNewTaskButton = TkButton.new(self) {
       text 'Add new Task'
       underline 8
       command( $proc_sprint_add_new_task )
     }
 
-    addNewSubTaskButton = TkButton.new(self) {
+    @addNewSubTaskButton = TkButton.new(self) {
       text 'Add Sub Task'
       underline 6
       command( $proc_sprint_add_new_sub_task )
     }
 
     # Delete selected task button
-    deleteButton = TkButton.new(self) {
+    @deleteButton = TkButton.new(self) {
       text 'Delete Task'
       underline 0
+      state 'disabled'
       command( $proc_sprint_delete_task )
-    }
-
-    @task_comment = TkText.new(self) {
-      width 30
-      height 5
-      borderwidth 1
-    #  font TkFont.new('times 12 bold')
     }
 
     @sprintTaskTree.grid(        :row => 3, :column => 0, :columnspan => numOfColumns, :rowspan => 8, :sticky => 'news' )
@@ -369,13 +410,13 @@ class SprintView < Tk::Tile::Frame
       taskDurationEntry[i].grid(                          :row => 21, :column => 3+i, :sticky => 'news' )
     end
 
-    updateButton.grid(           :row => 21, :column => numOfColumns + 2, :sticky => 'nw' )
-    moveUpButton.grid(           :row => 21, :column => numOfColumns + 4, :sticky => 'nw' )
-    moveDownButton.grid(         :row => 22, :column => numOfColumns + 4, :sticky => 'nw' )
+    @updateButton.grid(           :row => 21, :column => numOfColumns + 2, :sticky => 'nw' )
+    @moveUpButton.grid(           :row => 21, :column => numOfColumns + 4, :sticky => 'nw' )
+    @moveDownButton.grid(         :row => 22, :column => numOfColumns + 4, :sticky => 'nw' )
     TkGrid(TkLabel.new(self, :text => " "), :row => 23, :column => numOfColumns + 1)
-    deleteButton.grid(           :row => 24, :column => numOfColumns + 4, :sticky => 'nw' )
-    addNewTaskButton.grid(       :row => 22, :column => numOfColumns + 2, :sticky => 'nw' )
-    addNewSubTaskButton.grid(    :row => 23, :column => numOfColumns + 2, :sticky => 'nw' )
+    @deleteButton.grid(           :row => 24, :column => numOfColumns + 4, :sticky => 'nw' )
+    @addNewTaskButton.grid(       :row => 23, :column => numOfColumns + 2, :sticky => 'nw' )
+    @addNewSubTaskButton.grid(    :row => 24, :column => numOfColumns + 2, :sticky => 'nw' )
 
     TkGrid(TkLabel.new(self, :text => COMMENT), :row => 23, :column => 0)
     @task_comment.grid(           :row => 24, :column => 0, :columnspan => 4, :sticky => 'news')
