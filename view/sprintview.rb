@@ -134,10 +134,10 @@ class SprintView < Tk::Tile::Frame
 
   def initialize(guiManager, tab)
     super(tab) {padding "3 3 12 12"}
-    grid(:sticky => 'nws')
+    grid(:sticky => 'news')
 
-    TkGrid.columnconfigure( self, 0, :weight => 1 )
-    TkGrid.rowconfigure( self, 0, :weight => 1 )
+    TkGrid.columnconfigure( self, 0, :weight => 0 )
+    TkGrid.rowconfigure( self, 0, :weight => 0 )
 
     create_procs
 
@@ -153,6 +153,7 @@ class SprintView < Tk::Tile::Frame
       from 0
       increment 1
       width 10
+      font TkFont.new('Arial 12')
     }
     sprintEntry.bind("ButtonRelease-1", @changeSprint)
     sprintEntry.bind("KeyRelease-Up", @changeSprint)
@@ -337,9 +338,9 @@ class SprintView < Tk::Tile::Frame
     #  font TkFont.new('times 12 bold')
     }
 
-    @sprintTaskTree.grid(        :row => 0, :column => 0, :columnspan => numOfColumns, :rowspan => 10, :sticky => 'news' )
-    TkGrid(TkLabel.new(self, :text => SELECT_SPRINT), :row => 1, :column => numOfColumns + 2, :sticky => 'ne')
-    sprintEntry.grid(            :row => 1, :column => numOfColumns + 3, :columnspan => 2,:sticky => 'nw' )
+    @sprintTaskTree.grid(        :row => 3, :column => 0, :columnspan => numOfColumns, :rowspan => 8, :sticky => 'news' )
+    TkGrid(TkLabel.new(self, :text => SELECT_SPRINT) do font TkFont.new('Arial 12 bold') end, :row => 1, :column => 1, :sticky => 'ne')
+    sprintEntry.grid(            :row => 1, :column => 2, :columnspan => 2, :sticky => 'nw' )
     TkGrid(TkLabel.new(self, :text => " "), :row => 1, :column => numOfColumns + 1)
     TkGrid(TkLabel.new(self, :text => " "), :row => 0, :column => numOfColumns + 3)
     TkGrid(TkLabel.new(self, :text => "Team velocity:"), :row => 2, :column => numOfColumns + 2, :sticky => 'ne')
