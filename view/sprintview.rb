@@ -20,6 +20,17 @@
 
 class SprintView < Tk::Tile::Frame
 
+   def  delete_tasks
+    items = @sprintTaskTree.selection
+
+    logger "selected: " + items.inspect
+    items.each do |item|
+      @project.delete_sprint_task(item.to_i)
+    end
+
+    refreshView
+  end
+
   def updateTask(item_id)
     logger "updateTask: " + item_id.to_s
     task = @project.findTask(item_id)
@@ -95,10 +106,10 @@ class SprintView < Tk::Tile::Frame
   end
 
   def refreshTaskEditor
-    item = @sprintTaskTree.focus_item()
-    logger "selected: " + item.inspect
-    if !item.nil?
-      task = @project.findTask(item.to_i)
+    items = @sprintTaskTree.selection
+    logger "selected: " + items.inspect
+    if items.size == 1
+      task = @project.findTask(items[0].to_i)
 
       logger task.inspect, 4
 
@@ -115,6 +126,20 @@ class SprintView < Tk::Tile::Frame
       @deleteButton.configure( :state => 'normal' )
       @addNewTaskButton.configure( :state => 'normal' )
       @addNewSubTaskButton.configure( :state => 'normal' )
+    elsif items.size > 1
+      @taskName.value = ''
+      @taskCommitter.value = ''
+      @taskStatus.value = ''
+      @task_comment.value = ''
+      @project.sprintlength.times.each  do |i|
+        @taskDuration[i].value = ''
+      end
+
+      @moveUpButton.configure( :state => 'disabled' )
+      @moveDownButton.configure( :state => 'disabled' )
+      @deleteButton.configure( :state => 'normal' )
+      @addNewTaskButton.configure( :state => 'disabled' )
+      @addNewSubTaskButton.configure( :state => 'disabled' )
     else
       @taskName.value = ''
       @taskCommitter.value = ''
@@ -287,12 +312,7 @@ class SprintView < Tk::Tile::Frame
     }
 
     $proc_sprint_delete_task = Proc.new {
-      item = @sprintTaskTree.focus_item()
-      logger "proc_sprint_delete_task: " + item.inspect
-      if !item.nil?
-        @project.delete_sprint_task(item.to_i)
-      end
-      refreshView
+      delete_tasks
     }
 
     $proc_sprint_add_new_task = Proc.new {

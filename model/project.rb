@@ -220,6 +220,8 @@ class Project
       return t.tasks.delete(task_id)
     elsif !task.nil?
       return @tasks[@sprint].delete(task_id)
+    else
+      logger "task was not found", 4
     end
     nil
   end
