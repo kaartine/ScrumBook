@@ -81,13 +81,26 @@ class BacklogView < Tk::Tile::Frame
       @backlog_task_estimate.value = task.estimate
       @backlog_task_targetted_sprint.value = task.targetted_sprint
 
+      @backlog_updateButton.configure( :state => 'normal' )
+      @backlog_moveUpButton.configure( :state => 'normal' )
+      @backlog_moveDownButton.configure( :state => 'normal' )
+      @backlog_deleteButton.configure( :state => 'normal' )
+      @backlog_addNewTaskButton.configure( :state => 'normal' )
+
     else
       @backlog_task_name.value = ''
       @backlog_task_comment.value = ''
       @backlog_task_milestone.value = ''
       @backlog_task_estimate.value = ''
       @backlog_task_targetted_sprint.value = ''
+
+      @backlog_moveUpButton.configure( :state => 'disabled' )
+      @backlog_moveDownButton.configure( :state => 'disabled' )
+      @backlog_deleteButton.configure( :state => 'disabled' )
+      @backlog_addNewTaskButton.configure( :state => 'disabled' )
     end
+
+    @backlog_updateButton.configure( :state => 'disabled' )
   end
 
 
@@ -128,6 +141,15 @@ class BacklogView < Tk::Tile::Frame
         task = @project.find_backlog_task(item.to_i)
         backlog_update_task(@backlog_tree.focus_item().to_i)
         refreshView(task.task_id)
+      end
+    }
+
+    $proc_activate_buttons = Proc.new {
+      item = @backlog_tree.focus_item()
+      unless item.nil?
+        @backlog_updateButton.configure( :state => 'normal' )
+      else
+        @backlog_addNewTaskButton.configure( :state => 'normal' )
       end
     }
 
@@ -182,33 +204,33 @@ class BacklogView < Tk::Tile::Frame
 
 
     # Task update button
-    backlog_updateButton = TkButton.new(self) {
+    @backlog_updateButton = TkButton.new(self) {
       text 'Update Task'
       underline 0
       command( $proc_update_backlog_item )
     }
 
     # Task update button
-    backlog_moveUpButton = TkButton.new(self) {
+    @backlog_moveUpButton = TkButton.new(self) {
       text 'Move Up'
       command( $proc_backlog_move_task_up)
     }
 
     # Task update button
-    backlog_moveDownButton = TkButton.new(self) {
+    @backlog_moveDownButton = TkButton.new(self) {
       text 'Move Down'
       command( $proc_backlog_move_task_down )
     }
 
     # Add new task button
-    backlog_addNewTaskButton = TkButton.new(self) {
+    @backlog_addNewTaskButton = TkButton.new(self) {
       text 'Add new Task'
       underline 8
       command( $proc_add_new_backlog_item )
     }
 
     # Delete selected task button
-    backlog_deleteButton = TkButton.new(self) {
+    @backlog_deleteButton = TkButton.new(self) {
       text 'Delete Task'
       underline 0
       command( $proc_backlog_delete_task )
@@ -221,7 +243,6 @@ class BacklogView < Tk::Tile::Frame
       command( $proc_backlog_copy_tasks_to_sprint )
     }
 
-
     # Task edition fields
     @backlog_task_name = TkVariable.new
     @backlog_task_milestone = TkVariable.new
@@ -230,15 +251,19 @@ class BacklogView < Tk::Tile::Frame
 
     task_name_entry = TkEntry.new(self)
     task_name_entry.textvariable = @backlog_task_name
+    task_name_entry.bind( "KeyPress", $proc_activate_buttons )
 
     task_estimate_entry = TkEntry.new(self)
     task_estimate_entry.textvariable = @backlog_task_estimate
+    task_estimate_entry.bind( "KeyPress", $proc_activate_buttons )
 
     task_milestone_entry = TkEntry.new(self)
     task_milestone_entry.textvariable = @backlog_task_milestone
+    task_milestone_entry.bind( "KeyPress", $proc_activate_buttons )
 
     task_targetted_sprint_entry = TkEntry.new(self)
     task_targetted_sprint_entry.textvariable = @backlog_task_targetted_sprint
+    task_targetted_sprint_entry.bind( "KeyPress", $proc_activate_buttons )
 
     @backlog_task_comment = TkText.new(self) {
       width 30
@@ -259,16 +284,22 @@ class BacklogView < Tk::Tile::Frame
     TkGrid(TkLabel.new(self, :text => TARGETTED_SPRINT), :row => 20, :column => 3)
     task_targetted_sprint_entry.grid(                     :row => 21, :column => 3, :sticky => 'news' )
 
-    backlog_updateButton.grid(           :row => 21, :column => 5, :sticky => 'nw' )
-    backlog_moveUpButton.grid(           :row => 21, :column => 7, :sticky => 'nw' )
-    backlog_moveDownButton.grid(         :row => 22, :column => 7, :sticky => 'nw' )
+    @backlog_updateButton.grid(           :row => 21, :column => 5, :sticky => 'nw' )
+    @backlog_moveUpButton.grid(           :row => 21, :column => 7, :sticky => 'nw' )
+    @backlog_moveDownButton.grid(         :row => 22, :column => 7, :sticky => 'nw' )
     TkGrid(TkLabel.new(self, :text => " "), :row => 23, :column => 5 + 1)
     TkGrid(TkLabel.new(self, :text => " "), :row => 23, :column => 4)
-    backlog_deleteButton.grid(           :row => 24, :column => 5, :sticky => 'nw' )
-    backlog_addNewTaskButton.grid(       :row => 22, :column => 5, :sticky => 'nw' )
+    @backlog_deleteButton.grid(           :row => 24, :column => 5, :sticky => 'nw' )
+    @backlog_addNewTaskButton.grid(       :row => 22, :column => 5, :sticky => 'nw' )
 
     TkGrid(TkLabel.new(self, :text => COMMENT), :row => 23, :column => 0)
     @backlog_task_comment.grid(           :row => 24, :column => 0, :columnspan => 2, :sticky => 'news')
+
+    @backlog_updateButton.configure( :state => 'disabled' )
+    @backlog_moveUpButton.configure( :state => 'disabled' )
+    @backlog_moveDownButton.configure( :state => 'disabled' )
+    @backlog_deleteButton.configure( :state => 'disabled' )
+    @backlog_addNewTaskButton.configure( :state => 'disabled' )
 
     self
   end
