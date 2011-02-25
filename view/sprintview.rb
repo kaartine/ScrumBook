@@ -288,7 +288,7 @@ class SprintView < Tk::Tile::Frame
 
     $proc_sprint_delete_task = Proc.new {
       item = @sprintTaskTree.focus_item()
-      logger "procUpdateTask: " + item.inspect
+      logger "proc_sprint_delete_task: " + item.inspect
       if !item.nil?
         @project.delete_sprint_task(item.to_i)
       end
