@@ -62,6 +62,13 @@ class SprintView < Tk::Tile::Frame
     @effortsRemaining.clear
 
     fillTasks(@project.tasks[id], nil)
+    # change background color of item if it is reference from backlog      
+    begin
+      @sprintTaskTree.tag_configure('reference', :background => 'green')
+    rescue
+      logger 'coloring is not supported'
+    end
+    @sprintTaskTree.tag_bind('clickapple', 'ButtonRelease-1', @changeTask)
 
     @project.sprintlength.times.each do |i|
       @effortsRemainingLabel[i].text = @effortsRemaining[i]
@@ -94,20 +101,18 @@ class SprintView < Tk::Tile::Frame
           @sprintTaskTree.set(t.task_id, "w#{i}", t.duration[i])
           @effortsRemaining.push(0) if @effortsRemaining[i].nil?
           @effortsRemaining[i] += t.duration[i].to_i
-        end
+        end        
 
         logger "t.tasks: #{t.tasks.inspect}", 4
         fillTasks(t.tasks, t)
-      end
-        # change background color of item if it is reference from backlog
-        @sprintTaskTree.tag_configure('reference', :background => 'green')
-        @sprintTaskTree.tag_bind('clickapple', 'ButtonRelease-1', @changeTask)
+      end     
     end
   end
 
   def refreshTaskEditor
     items = @sprintTaskTree.selection
     logger "selected: " + items.inspect
+    items.push @sprintTaskTree.focus_item() if items.size == 0 && !@sprintTaskTree.focus_item().nil?
     if items.size == 1
       task = @project.findTask(items[0].to_i)
 
@@ -209,7 +214,24 @@ class SprintView < Tk::Tile::Frame
     hoursAvailable.textvariable = @hoursAvailableVar
 
     # Sprint's task tree
-    @sprintTaskTree = Tk::Tile::Treeview.new(self)
+    @sprintTaskTree = Tk::Tile::Treeview.new(self) {
+      yscroll proc{ |idx|
+    	  tree_scroll.set *idx
+      }
+    }
+
+    tree_scroll = TkScrollbar.new(self) do
+      orient 'vertical'
+    end
+
+    @sprintTaskTree.yscrollcommand(proc { |*args|
+      tree_scroll.set(*args)
+    })
+
+    tree_scroll.command(proc { |*args|
+      @sprintTaskTree.yview(*args)
+    })
+
 
     columns = 'committer status'
     @project.sprintlength.times.each do |d|
@@ -400,12 +422,12 @@ class SprintView < Tk::Tile::Frame
     }
 
     @sprintTaskTree.grid(        :row => 3, :column => 0, :columnspan => numOfColumns, :rowspan => 8, :sticky => 'news' )
+    tree_scroll.grid(        :row => 3, :column => numOfColumns + 1, :rowspan => 8, :sticky => 'news' )
     TkGrid(TkLabel.new(self, :text => SELECT_SPRINT) do font TkFont.new('Arial 12 bold') end, :row => 1, :column => 1, :sticky => 'ne')
     sprintEntry.grid(            :row => 1, :column => 2, :columnspan => 2, :sticky => 'nw' )
     TkGrid(TkLabel.new(self, :text => " "), :row => 1, :column => numOfColumns + 1)
-    TkGrid(TkLabel.new(self, :text => " "), :row => 0, :column => numOfColumns + 3)
-    TkGrid(TkLabel.new(self, :text => "Team velocity:"), :row => 2, :column => numOfColumns + 2, :sticky => 'ne')
-    hoursAvailable.grid(         :row => 2, :column => numOfColumns + 3, :columnspan => 2, :sticky => 'nw' )
+    TkGrid(TkLabel.new(self, :text => "Team velocity:"), :row => 1, :column => 3, :sticky => 'ne')
+    hoursAvailable.grid(         :row => 1, :column => 4, :columnspan => 2, :sticky => 'nw' )
     copyButton.grid(             :row => 4, :column => numOfColumns + 2, :sticky => 'ne' )
 
     TkGrid(TkLabel.new(self, :text => "Task"), :row => 20, :column => 0)
@@ -431,10 +453,10 @@ class SprintView < Tk::Tile::Frame
     end
 
     @updateButton.grid(           :row => 21, :column => numOfColumns + 2, :sticky => 'nw' )
-    @moveUpButton.grid(           :row => 21, :column => numOfColumns + 4, :sticky => 'nw' )
-    @moveDownButton.grid(         :row => 22, :column => numOfColumns + 4, :sticky => 'nw' )
+    @moveUpButton.grid(           :row => 5, :column => numOfColumns + 2, :sticky => 'nw' )
+    @moveDownButton.grid(         :row => 6, :column => numOfColumns + 2, :sticky => 'nw' )
     TkGrid(TkLabel.new(self, :text => " "), :row => 23, :column => numOfColumns + 1)
-    @deleteButton.grid(           :row => 24, :column => numOfColumns + 4, :sticky => 'nw' )
+    @deleteButton.grid(           :row => 25, :column => numOfColumns + 2, :sticky => 'nw' )
     @addNewTaskButton.grid(       :row => 23, :column => numOfColumns + 2, :sticky => 'nw' )
     @addNewSubTaskButton.grid(    :row => 24, :column => numOfColumns + 2, :sticky => 'nw' )
 

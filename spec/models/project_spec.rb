@@ -242,6 +242,40 @@ describe Project do
     project.moveTaskDown(4)
     project.findTask(1).tasks[0].name.should == "first"
   end
+  
+  it "should be possible to move backlog task up" do
+    project = Project.create
+    first = Task.new("first", "C", "open")
+    second = Task.new("second", "C", "closed")
+    third = Task.new("third", "C", "closed")
+    project.add_new_task_to_backlog(first)
+    project.add_new_task_to_backlog(second)
+    project.backlog[0].name.should == "first"
+    project.backlog[1].name.should == "second"
+    project.move_backlog_task_up(1)
+    project.backlog[0].name.should == "first"
+    project.backlog[1].name.should == "second"
+    project.move_backlog_task_up(2)
+    project.backlog[1].name.should == "first"
+    project.backlog[0].name.should == "second"
+  end
+
+  it "should be possible to move backlog task down" do
+    project = Project.create
+    first = Task.new("first", "C", "open")
+    second = Task.new("second", "C", "closed")
+    third = Task.new("third", "C", "closed")
+    project.add_new_task_to_backlog(first)
+    project.add_new_task_to_backlog(second)
+    project.backlog[0].name.should == "first"
+    project.backlog[1].name.should == "second"
+    project.move_backlog_task_down(2)
+    project.backlog[0].name.should == "first"
+    project.backlog[1].name.should == "second"
+    project.move_backlog_task_down(1)
+    project.backlog[1].name.should == "first"
+    project.backlog[0].name.should == "second"
+  end
 
   it "should be possible to delete sub task" do
     project = Project.create

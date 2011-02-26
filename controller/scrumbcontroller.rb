@@ -77,13 +77,19 @@ class ScrumBController
 
   def saveProject
     logger "save project"
-    file = File.new @project.fileName, 'w'
-    logger @project.inspect, 4
+
     @project.set_to_saved
     serial = YAML.dump( @project )
     logger "serial: " + serial.inspect, 4
-    file.write serial
-    file.close
+    logger @project.inspect, 4
+
+    begin
+      file = File.new @project.fileName, 'w'
+      file.write serial
+    ensure
+      file.close
+    end
+
     @gui.refreshTitle
     true
   end

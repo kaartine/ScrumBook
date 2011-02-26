@@ -228,6 +228,7 @@ class Project
 
   def moveTaskUp(task_id)
     task = findTask(task_id)
+    return if task.nil?
     tasks = nil?
     if task.parent.nil?
       tasks = @tasks[@sprint]
@@ -245,6 +246,7 @@ class Project
 
   def moveTaskDown(task_id)
     task = findTask(task_id)
+    return if task.nil?
     tasks = nil?
     if task.parent.nil?
       tasks = @tasks[@sprint]
@@ -252,6 +254,32 @@ class Project
       tasks = task.parent.tasks
     end
 
+    id1 = tasks.index(task_id)
+    if id1 == tasks.size-1 || tasks.size <= 1
+      return
+    end
+    modified
+    tasks[id1], tasks[id1+1] = tasks[id1+1], tasks[id1]
+  end
+  
+  def move_backlog_task_up(task_id)
+    task = find_backlog_task(task_id)
+    return if task.nil?
+    tasks = @backlog
+  
+    id1 = tasks.index(task_id)
+    if id1 == 0 || tasks.size <= 1
+      return
+    end
+    modified
+    tasks[id1-1], tasks[id1] = tasks[id1], tasks[id1-1]
+  end
+  
+  def move_backlog_task_down(task_id)
+    task = find_backlog_task(task_id)
+    return if task.nil?
+    tasks = @backlog
+  
     id1 = tasks.index(task_id)
     if id1 == tasks.size-1 || tasks.size <= 1
       return

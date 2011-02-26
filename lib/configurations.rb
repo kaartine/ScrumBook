@@ -38,5 +38,5 @@ TARGETTED_SPRINT = 'Targetted to sprint'
 TASK_NAME = 'Task'
 
 
-WIDTH = 1000
+WIDTH = 1100
 HEIGHT = 600
