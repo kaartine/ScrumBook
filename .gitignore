@@ -3,3 +3,5 @@
 *.stackdump
 *.scb
 .directory
+.project
+.buildpath
