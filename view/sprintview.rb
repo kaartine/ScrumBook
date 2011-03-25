@@ -179,10 +179,10 @@ class SprintView < Tk::Tile::Frame
 
   def initialize(guiManager, tab)
     super(tab) {padding "3 3 12 12"}
-    grid(:sticky => 'news')
+    grid(:sticky => 'nws')
 
-    TkGrid.columnconfigure( self, 0, :weight => 0 )
-    TkGrid.rowconfigure( self, 0, :weight => 0 )
+    TkGrid.columnconfigure( self, 0, :weight => 1 )
+    TkGrid.rowconfigure( self, 0, :weight => 1 )
 
     create_procs
 
