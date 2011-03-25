@@ -179,7 +179,23 @@ class BacklogView < Tk::Tile::Frame
     @project = Project.create
     @gui = guiManager
     # Backlog tree
-    @backlog_tree = Tk::Tile::Treeview.new(self)
+    @backlog_tree = Tk::Tile::Treeview.new(self) do
+        yscroll proc{ |idx|
+        tree_scroll.set *idx
+    }
+    end
+
+    tree_scroll = TkScrollbar.new(self) do
+      orient 'vertical'
+    end
+
+    @backlog_tree.yscrollcommand( proc { |*args|
+      tree_scroll.set(*args)
+    })
+
+    tree_scroll.command(proc { |*args|
+      @backlog_tree.yview(*args)
+    })
 
     columns = 'estimate milestone sprint'
 
@@ -348,6 +364,7 @@ class BacklogView < Tk::Tile::Frame
     @backlog_task_comment.bind( "KeyPress", $proc_activate_buttons )
 
     @backlog_tree.grid(        :row => 0, :column => 0, :columnspan => 4, :rowspan => 8, :sticky => 'news' )
+    tree_scroll.grid(        :row => 0, :column => 4, :rowspan => 8, :sticky => 'news' )
 
     backlog_copy_button.grid(              :row => 4, :column => 5, :sticky => 'new' )
 
