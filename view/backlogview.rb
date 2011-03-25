@@ -345,6 +345,7 @@ class BacklogView < Tk::Tile::Frame
       height 5
       borderwidth 1
     }
+    @backlog_task_comment.bind( "KeyPress", $proc_activate_buttons )
 
     @backlog_tree.grid(        :row => 0, :column => 0, :columnspan => 4, :rowspan => 8, :sticky => 'news' )
 
