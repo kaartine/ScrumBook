@@ -356,15 +356,32 @@ class BacklogView < Tk::Tile::Frame
     @task_targetted_sprint_entry.textvariable = @backlog_task_targetted_sprint
     @task_targetted_sprint_entry.bind( "KeyPress", $proc_activate_buttons )
 
-    @backlog_task_comment = TkText.new(self) {
+
+    @backlog_task_comment = TkText.new(self) do
       width 30
       height 5
       borderwidth 1
-    }
+      wrap 'word'
+      yscroll proc{ |idx|
+          comment_scroll.set *idx
+      }
+    end
+
+    comment_scroll = TkScrollbar.new(self) do
+      orient 'vertical'
+    end
+
     @backlog_task_comment.bind( "KeyPress", $proc_activate_buttons )
+    @backlog_task_comment.yscrollcommand( proc { |*args|
+      comment_scroll.set(*args)
+    })
+
+    comment_scroll.command(proc { |*args|
+      @backlog_task_comment.yview(*args)
+    })
 
     @backlog_tree.grid(        :row => 0, :column => 0, :columnspan => 4, :rowspan => 8, :sticky => 'news' )
-    tree_scroll.grid(        :row => 0, :column => 4, :rowspan => 8, :sticky => 'news' )
+    tree_scroll.grid(        :row => 0, :column => 4, :rowspan => 8, :sticky => 'nes' )
 
     backlog_copy_button.grid(              :row => 4, :column => 5, :sticky => 'new' )
 
@@ -387,6 +404,7 @@ class BacklogView < Tk::Tile::Frame
 
     TkGrid(TkLabel.new(self, :text => COMMENT), :row => 23, :column => 0)
     @backlog_task_comment.grid(           :row => 24, :column => 0, :columnspan => 2, :sticky => 'news')
+    comment_scroll.grid(        :row => 24, :column => 1, :sticky => 'nes' )
 
     @backlog_updateButton.configure( :state => 'disabled' )
     @backlog_moveUpButton.configure( :state => 'disabled' )
