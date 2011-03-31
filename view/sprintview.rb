@@ -62,7 +62,7 @@ class SprintView < Tk::Tile::Frame
     @effortsRemaining.clear
 
     fillTasks(@project.tasks[id], nil)
-    # change background color of item if it is reference from backlog      
+    # change background color of item if it is reference from backlog
     begin
       @sprintTaskTree.tag_configure('reference', :background => 'green')
     rescue
@@ -101,11 +101,11 @@ class SprintView < Tk::Tile::Frame
           @sprintTaskTree.set(t.task_id, "w#{i}", t.duration[i])
           @effortsRemaining.push(0) if @effortsRemaining[i].nil?
           @effortsRemaining[i] += t.duration[i].to_i
-        end        
+        end
 
         logger "t.tasks: #{t.tasks.inspect}", 4
         fillTasks(t.tasks, t)
-      end     
+      end
     end
   end
 
@@ -297,6 +297,17 @@ class SprintView < Tk::Tile::Frame
     }
     @task_comment.bind( "KeyPress", $proc_activate_buttons )
 
+    comment_scroll = TkScrollbar.new(self) do
+      orient 'vertical'
+    end
+
+    @task_comment.yscrollcommand( proc { |*args|
+      comment_scroll.set(*args)
+    })
+
+    comment_scroll.command(proc { |*args|
+      @task_comment.yview(*args)
+    })
 
     $proc_sprint_add_new_sub_task = Proc.new {
       task = create_new_task
@@ -308,14 +319,14 @@ class SprintView < Tk::Tile::Frame
         Tk.messageBox(
             'type'    => "ok",
             'icon'    => "info",
-            'title'   => "Title",
+            'title'   => MESSAGE_ARGUMENT_ERROR,
             'message' => "You have to give name to your task!"
           )
       rescue ParentError
           Tk.messageBox(
             'type'    => "ok",
             'icon'    => "info",
-            'title'   => "Title",
+            'title'   => MESSAGE_PARENT_ERROR,
             'message' => "Error: Parent was not found!"
           )
       end
@@ -346,7 +357,7 @@ class SprintView < Tk::Tile::Frame
         Tk.messageBox(
             'type'    => "ok",
             'icon'    => "info",
-            'title'   => "Title",
+            'title'   => MESSAGE_ARGUMENT_ERROR,
             'message' => "You have to give name to your task!"
           )
       end
@@ -421,16 +432,16 @@ class SprintView < Tk::Tile::Frame
       command( $proc_sprint_delete_task )
     }
 
-    @sprintTaskTree.grid(        :row => 3, :column => 0, :columnspan => numOfColumns, :rowspan => 8, :sticky => 'news' )
+    @sprintTaskTree.grid(        :row => 2, :column => 0, :columnspan => numOfColumns, :rowspan => 8, :sticky => 'news' )
     tree_scroll.grid(        :row => 3, :column => numOfColumns + 1, :rowspan => 8, :sticky => 'news' )
-    TkGrid(TkLabel.new(self, :text => SELECT_SPRINT) do font TkFont.new('Arial 12 bold') end, :row => 1, :column => 1, :sticky => 'ne')
-    sprintEntry.grid(            :row => 1, :column => 2, :columnspan => 2, :sticky => 'nw' )
-    TkGrid(TkLabel.new(self, :text => " "), :row => 1, :column => numOfColumns + 1)
-    TkGrid(TkLabel.new(self, :text => "Team velocity:"), :row => 1, :column => 3, :sticky => 'ne')
-    hoursAvailable.grid(         :row => 1, :column => 4, :columnspan => 2, :sticky => 'nw' )
+    TkGrid(TkLabel.new(self, :text => SELECT_SPRINT) do font TkFont.new('Arial 12 bold') end, :row => 0, :column => 0, :sticky => 'ne')
+    sprintEntry.grid(            :row => 0, :column => 1, :columnspan => 2, :sticky => 'nw' )
+    TkGrid(TkLabel.new(self, :text => " "), :row => 0, :column => numOfColumns + 1)
+    TkGrid(TkLabel.new(self, :text => TEAM_VELOCITY), :row => 0, :column => 2, :sticky => 'ne')
+    hoursAvailable.grid(         :row => 0, :column => 3, :columnspan => 2, :sticky => 'nw' )
     copyButton.grid(             :row => 4, :column => numOfColumns + 2, :sticky => 'ne' )
 
-    TkGrid(TkLabel.new(self, :text => "Task"), :row => 20, :column => 0)
+    TkGrid(TkLabel.new(self, :text => TASK), :row => 20, :column => 0)
     taskNameEntry.grid(                                   :row => 21, :column => 0, :sticky => 'news' )
     TkGrid(TkLabel.new(self, :text => COMMITTER), :row => 20, :column => 1)
     taskCommitter.grid(                                   :row => 21, :column => 1, :sticky => 'news' )
@@ -462,6 +473,7 @@ class SprintView < Tk::Tile::Frame
 
     TkGrid(TkLabel.new(self, :text => COMMENT), :row => 23, :column => 0)
     @task_comment.grid(           :row => 24, :column => 0, :columnspan => 4, :sticky => 'news')
+    comment_scroll.grid(        :row => 24, :column => 3, :sticky => 'nes' )
 
     @sprintTaskTree.bind("KeyRelease-Up", @changeTask)
     @sprintTaskTree.bind("KeyRelease-Down", @changeTask)

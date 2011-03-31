@@ -267,7 +267,7 @@ class BacklogView < Tk::Tile::Frame
       refreshView(item)
     }
 
-    $proc_backlog_move_task_down = Proc.new {      
+    $proc_backlog_move_task_down = Proc.new {
       item = @backlog_tree.focus_item()
       logger "proc_backlog_move_task_up: " + item.inspect
       if !item.nil?
@@ -334,6 +334,25 @@ class BacklogView < Tk::Tile::Frame
       command( $proc_backlog_copy_tasks_to_sprint )
     }
 
+    @backlog_task_comment = TkText.new(self) do
+      width 30
+      height 5
+      borderwidth 1
+      wrap 'word'
+    end
+
+    comment_scroll = TkScrollbar.new(self) do
+      orient 'vertical'
+    end
+
+    @backlog_task_comment.yscrollcommand( proc { |*args|
+      comment_scroll.set(*args)
+    })
+
+    comment_scroll.command(proc { |*args|
+      @backlog_task_comment.yview(*args)
+    })
+
     # Task edition fields
     @backlog_task_name = TkVariable.new
     @backlog_task_milestone = TkVariable.new
@@ -356,29 +375,7 @@ class BacklogView < Tk::Tile::Frame
     @task_targetted_sprint_entry.textvariable = @backlog_task_targetted_sprint
     @task_targetted_sprint_entry.bind( "KeyPress", $proc_activate_buttons )
 
-
-    @backlog_task_comment = TkText.new(self) do
-      width 30
-      height 5
-      borderwidth 1
-      wrap 'word'
-      yscroll proc{ |idx|
-          comment_scroll.set *idx
-      }
-    end
-
-    comment_scroll = TkScrollbar.new(self) do
-      orient 'vertical'
-    end
-
     @backlog_task_comment.bind( "KeyPress", $proc_activate_buttons )
-    @backlog_task_comment.yscrollcommand( proc { |*args|
-      comment_scroll.set(*args)
-    })
-
-    comment_scroll.command(proc { |*args|
-      @backlog_task_comment.yview(*args)
-    })
 
     @backlog_tree.grid(        :row => 0, :column => 0, :columnspan => 4, :rowspan => 8, :sticky => 'news' )
     tree_scroll.grid(        :row => 0, :column => 4, :rowspan => 8, :sticky => 'nes' )
@@ -436,3 +433,4 @@ class BacklogView < Tk::Tile::Frame
 
 
 end
+

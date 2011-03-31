@@ -36,7 +36,10 @@ STATUS = 'Status'
 SELECT_SPRINT = 'Select your sprint:'
 TARGETTED_SPRINT = 'Targetted to sprint'
 TASK_NAME = 'Task'
-
+TASK = 'Task'
+TEAM_VELOCITY = 'Team velocity:'
+MESSAGE_PARENT_ERROR = 'Parent not defined'
+MESSAGE_ARGUMENT_ERROR = 'Argument Error'
 
 WIDTH = 1100
 HEIGHT = 600
